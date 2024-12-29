@@ -7,6 +7,9 @@ server/
 │   ├── controllers/             # Request handlers/controllers
 │   │   └── index.ts            # Controller barrel file
 │   │
+│   ├── docs/                    # API documentation
+│   │   └── api.docs.ts         # Swagger API documentation
+│   │
 │   ├── middlewares/            # Custom middleware functions
 │   │   ├── auth.middleware.ts  # Authentication middleware
 │   │   ├── error.middleware.ts # Error handling middleware
@@ -47,6 +50,7 @@ Key Purpose of Each Directory:
 
 config/       - Contains configuration files for different services and environments
 controllers/  - Handles HTTP requests and responses
+docs/         - Contains API documentation using Swagger/OpenAPI specifications
 middlewares/  - Custom Express middleware functions
 models/       - Database models and schemas
 routes/       - API route definitions and endpoints
