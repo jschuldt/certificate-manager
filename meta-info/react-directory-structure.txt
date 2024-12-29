@@ -1,0 +1,22 @@
+src/
+├── assets/                 # Static files like images, fonts, etc.
+├── components/            # Shared/common components
+│   ├── common/           # Very reusable components (buttons, inputs, etc.)
+│   └── layout/           # Layout components (Header, Footer, Sidebar)
+├── features/             # Feature-based modules
+│   └── certificates/     # Example feature
+│       ├── components/   # Feature-specific components
+│       ├── hooks/        # Feature-specific hooks
+│       ├── services/     # Feature-specific services
+│       └── types/        # Feature-specific type definitions
+├── hooks/                # Shared hooks
+├── lib/                  # Third-party library configurations
+├── routes/               # Route definitions and components
+├── services/             # API and other services
+│   └── api/             # API related code
+├── stores/              # State management (if using Redux/Zustand/etc)
+├── styles/              # Global styles and theme
+├── types/               # Global type definitions
+├── utils/               # Utility functions
+├── App.tsx              # Main App component
+└── index.tsx           # Entry point

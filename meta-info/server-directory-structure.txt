@@ -1,0 +1,58 @@
+server/
+├── src/                          # Source directory for TypeScript files
+│   ├── config/                   # Configuration files
+│   │   ├── database.ts          # MongoDB connection configuration
+│   │   └── environment.ts       # Environment variables configuration
+│   │
+│   ├── controllers/             # Request handlers/controllers
+│   │   └── index.ts            # Controller barrel file
+│   │
+│   ├── middlewares/            # Custom middleware functions
+│   │   ├── auth.middleware.ts  # Authentication middleware
+│   │   ├── error.middleware.ts # Error handling middleware
+│   │   └── index.ts           # Middleware barrel file
+│   │
+│   ├── models/                 # MongoDB/Mongoose models
+│   │   └── index.ts           # Models barrel file
+│   │
+│   ├── routes/                 # API route definitions
+│   │   ├── api.routes.ts      # API routes aggregator
+│   │   └── index.ts           # Routes barrel file
+│   │
+│   ├── services/              # Business logic layer
+│   │   └── index.ts          # Services barrel file
+│   │
+│   ├── types/                # TypeScript type definitions
+│   │   └── index.ts         # Types barrel file
+│   │
+│   ├── utils/               # Utility functions and helpers
+│   │   └── index.ts        # Utils barrel file
+│   │
+│   └── index.ts            # Application entry point
+│
+├── tests/                  # Test files
+│   ├── integration/       # Integration tests
+│   └── unit/             # Unit tests
+│
+├── .env                   # Environment variables
+├── .env.example          # Example environment variables
+├── .eslintrc            # ESLint configuration
+├── .gitignore           # Git ignore rules
+├── jest.config.js       # Jest testing configuration
+├── package.json         # Project dependencies and scripts
+├── tsconfig.json        # TypeScript configuration
+└── README.md           # Server documentation
+
+Key Purpose of Each Directory:
+
+config/       - Contains configuration files for different services and environments
+controllers/  - Handles HTTP requests and responses
+middlewares/  - Custom Express middleware functions
+models/       - Database models and schemas
+routes/       - API route definitions and endpoints
+services/     - Business logic implementation
+types/        - TypeScript interfaces, types, and enums
+utils/        - Helper functions and utilities
+tests/        - Test files separated by type
+
+Note: Each directory contains an index.ts file for clean exports management.

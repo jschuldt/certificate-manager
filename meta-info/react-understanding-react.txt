@@ -1,0 +1,109 @@
+File Structure and Interactions Explanation:
+
+1. Entry Points:
+   - index.tsx: This is the main entry point of your React application. It:
+     * Sets up the theme provider
+     * Applies global styles
+     * Renders the root App component
+     * Wraps everything in strict mode for better development experience
+
+2. Core Application Files:
+   - App.tsx: The root component of your application that:
+     * Provides the basic structure
+     * Currently renders the MainLayout and LandingPage components
+
+3. Styling and Theme:
+   - styles/theme.ts: Centralizes all styling configuration:
+     * Defines a custom Material-UI theme
+     * Sets up color palettes
+     * Configures typography
+     * Defines global styles for consistent appearance
+
+4. Layout Components:
+   - components/layout/MainLayout.tsx: Provides the basic structure for all pages:
+     * Creates a full-height container
+     * Handles basic layout styling
+     * Wraps all child components
+
+5. Feature Components:
+   - features/landing/components/LandingPage.tsx: A feature-specific component that:
+     * Uses styled components for custom styling
+     * Implements responsive design
+     * Currently displays an "Under Construction" message
+
+6. Routing:
+   - routes/index.tsx: Manages application routing:
+     * Sets up React Router
+     * Defines available routes
+     * Wraps routes in the MainLayout
+
+7. API Configuration:
+   - services/api/config.ts: Sets up API communication:
+     * Configures Axios for HTTP requests
+     * Sets base URL and default headers
+     * Provides a centralized point for API interactions
+
+8. Package Configuration:
+   - package.json: Manages project dependencies and scripts:
+     * Lists all npm packages required
+     * Defines scripts for development, building, and testing
+     * Sets up development tools and configurations
+
+How They Work Together:
+1. When the application starts, index.tsx bootstraps the application and applies the theme
+2. The theme from theme.ts is used throughout all components for consistent styling
+3. App.tsx provides the main structure, using MainLayout as a wrapper
+4. Routes are defined in routes/index.tsx, determining what components show at what URLs
+5. The LandingPage component is rendered within the MainLayout
+6. API calls (when implemented) will use the configured axios instance from api/config.ts
+
+This structure follows React best practices by:
+- Separating concerns (styling, layout, features, routing)
+- Using a component-based architecture
+- Implementing proper file organization
+- Setting up centralized theming
+- Preparing for API integration
+
+File Reference Guide:
+
+1. /client/src/index.tsx
+   Purpose: Application entry point
+   Function: Initializes the React application, sets up theme provider, and renders the root component
+   Key Features: Theme implementation, global styles application, strict mode configuration
+
+2. /client/src/App.tsx
+   Purpose: Root component
+   Function: Serves as the main application container
+   Key Features: Basic routing setup, main layout implementation
+
+3. /client/src/styles/theme.ts
+   Purpose: Theme configuration
+   Function: Defines the application's visual foundation
+   Key Features: Material-UI theme customization, color palette definition, typography settings, global style rules
+
+4. /client/src/services/api/config.ts
+   Purpose: API configuration
+   Function: Sets up HTTP client for backend communication
+   Key Features: Axios instance configuration, base URL setup, default headers
+
+5. /client/src/routes/index.tsx
+   Purpose: Routing configuration
+   Function: Manages application navigation
+   Key Features: Route definitions, layout wrapping, component mapping
+
+6. /client/src/features/landing/components/LandingPage.tsx
+   Purpose: Landing page component
+   Function: Displays the initial view users see
+   Key Features: Styled components, responsive design, placeholder content
+
+7. /client/src/components/layout/MainLayout.tsx
+   Purpose: Layout wrapper
+   Function: Provides consistent page structure
+   Key Features: Flexible container, styling consistency, children component rendering
+
+8. /client/package.json
+   Purpose: Project configuration
+   Function: Manages dependencies and scripts
+   Key Features: NPM package definitions, script commands, development configurations
+
+Each file plays a crucial role in maintaining a well-organized, maintainable, and scalable React application structure. The separation of concerns and modular architecture allows for easy expansion and modification of features as the application grows.
