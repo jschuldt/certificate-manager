@@ -7,6 +7,7 @@ import {
 import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
+import InventoryIcon from '@mui/icons-material/Inventory';
 import { useNavigate } from 'react-router-dom';
 import { StyledDrawer, StyledListItemButton } from '../../styles/Sidebar.styles';
 
@@ -16,6 +17,7 @@ export const Sidebar = () => {
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Query Website', icon: <SearchIcon />, path: '/query' },
+    { text: 'Certificate Inventory', icon: <InventoryIcon />, path: '/inventory' },
     { text: 'About', icon: <InfoIcon />, path: '/about' },
   ];
 
