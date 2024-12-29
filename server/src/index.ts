@@ -8,6 +8,7 @@ import { config } from './config/environment';
 import { errorHandler } from './middlewares/error.middleware';
 import apiRoutes from './routes';
 import swaggerOptions from './config/swagger';
+import { connectDB } from './config/database';
 
 const app = express();
 
@@ -63,6 +64,9 @@ const PORT = process.env.PORT || 3443;
 
 const startServer = async () => {
   try {
+    // Connect to MongoDB first
+    await connectDB();
+    
     app.listen(PORT, () => {
       console.log('=================================');
       console.log(`🚀 Server is up and running!`);

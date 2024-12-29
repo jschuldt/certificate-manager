@@ -7,7 +7,7 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Certificate Manager API',
       version: '1.0.0',
-      description: 'API documentation for the Certificate Manager application',
+      description: 'API for managing SSL certificates',
     },
     servers: [
       {
@@ -27,11 +27,27 @@ const options: swaggerJsdoc.Options = {
       }
     ],
     paths: {
-      '/api/': apiDocs.welcome,
-      '/api/check-certificate': apiDocs.checkCertificate
+      '/api': {
+        ...apiDocs.welcome
+      },
+      '/api/check-certificate': {
+        ...apiDocs.checkCertificate
+      },
+      '/api/certificates': {
+        ...apiDocs.certificates
+      },
+      '/api/certificates/{id}': {
+        ...apiDocs.certificateById
+      },
+      '/api/certificates/search': {
+        ...apiDocs.certificateSearch
+      },
+      '/api/certificates/expiring/{days}': {
+        ...apiDocs.certificateExpiring
+      }
     }
   },
-  apis: []
+  apis: ['./src/routes/*.ts', './src/models/*.ts']
 };
 
 export default options;

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    ports:
+      - "3443:3443"
+    volumes:
+      - ../server:/app
+      - /app/node_modules
+    environment:
+      - MONGODB_URI=mongodb://localhost:27017/certificate-manager
