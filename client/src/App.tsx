@@ -1,12 +1,21 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
-import { LandingPage } from './features/landing/components/LandingPage';
+import { Home } from './features/home/components/Home';
+import { QueryWebsite } from './features/query/components/QueryWebsite';
+import { About } from './features/about/components/About';
 
 const App: React.FC = () => {
   return (
-    <MainLayout>
-      <LandingPage />
-    </MainLayout>
+    <Router>
+      <MainLayout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/query" element={<QueryWebsite />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
+      </MainLayout>
+    </Router>
   );
 };
 

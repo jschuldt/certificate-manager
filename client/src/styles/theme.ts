@@ -1,12 +1,21 @@
-import { createTheme, GlobalStyles } from '@mui/material';
+import { createTheme, Theme } from '@mui/material';
 
-export const theme = createTheme({
+// Define theme configuration
+const themeConfig = {
   palette: {
     primary: {
       main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
     },
     secondary: {
       main: '#dc004e',
+      light: '#ff4081',
+      dark: '#c51162',
+    },
+    background: {
+      default: '#f5f5f5',
+      paper: '#ffffff',
     },
   },
   typography: {
@@ -18,9 +27,27 @@ export const theme = createTheme({
       fontSize: '2rem',
       fontWeight: 500,
     },
-    // Add more typography variants as needed
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+        },
+        outlined: {
+          '&:hover': {
+            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
     MuiContainer: {
       styleOverrides: {
         root: {
@@ -29,18 +56,26 @@ export const theme = createTheme({
         },
       },
     },
-    // Add more component style overrides as needed
   },
-});
+};
 
+// Create and export theme
+export const theme = createTheme(themeConfig);
+
+// Global styles
 export const globalStyles = {
   styles: {
     body: {
       margin: 0,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
-      'webkit-font-smoothing': 'antialiased',
-      'moz-osx-font-smoothing': 'grayscale',
-      backgroundColor: '#f5f5f5',
+      WebkitFontSmoothing: 'antialiased',
+      MozOsxFontSmoothing: 'grayscale',
+      backgroundColor: themeConfig.palette.background.default,
     }
   }
 };
+
+// Type-safe styled-component theme helper
+declare module '@emotion/react' {
+  export interface Theme extends Theme {}
+}
