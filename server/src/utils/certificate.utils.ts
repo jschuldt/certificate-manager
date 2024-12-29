@@ -2,12 +2,22 @@ import https from 'https';
 import { URL } from 'url';
 import { TLSSocket } from 'tls';
 
-interface CertificateInfo {
+export interface CertificateInfo {
   website: string;
   issuer: string;
   validFrom: string;
   validTo: string;
   issuedBy: string;
+  serialNumber: string;
+  country: string;
+  state: string;
+  locality: string;
+  organization: string;
+  organizationalUnit: string;
+  commonName: string;
+  alternativeNames: string[];
+  fingerprint: string;
+  bits: number;
 }
 
 export const getCertificateInfo = (websiteUrl: string): Promise<CertificateInfo> => {
@@ -34,6 +44,17 @@ export const getCertificateInfo = (websiteUrl: string): Promise<CertificateInfo>
           validFrom: cert.valid_from,
           validTo: cert.valid_to,
           issuedBy: cert.issuer.O || 'Unknown',
+          serialNumber: cert.serialNumber || '',
+          country: cert.subject.C || '',
+          state: cert.subject.ST || '',
+          locality: cert.subject.L || '',
+          organization: cert.subject.O || '',
+          organizationalUnit: cert.subject.OU || '',
+          commonName: cert.subject.CN || '',
+          alternativeNames: cert.subjectaltname ? 
+            cert.subjectaltname.split(',').map(name => name.trim().replace('DNS:', '')) : [],
+          fingerprint: cert.fingerprint || '',
+          bits: cert.bits || 0
         });
       });
 

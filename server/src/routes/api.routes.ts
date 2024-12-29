@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { certificateController } from '../controllers/certificate.controller';
 import { getCertificateInfo } from '../utils/certificate.utils';
+import { mapCertificateInfoToModel } from '../utils/mapper.utils';
 
 const router = Router();
 
@@ -28,7 +29,8 @@ router.get('/check-certificate', async (req, res) => {
     }
 
     const certInfo = await getCertificateInfo(url);
-    res.json(certInfo);
+    const mappedCertificate = mapCertificateInfoToModel(certInfo);
+    res.json(mappedCertificate);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ 

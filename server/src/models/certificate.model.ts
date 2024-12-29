@@ -12,7 +12,15 @@ const certificateSchema = new Schema(
     serialNumber: { type: String },
     subject: { type: String },
     organization: { type: String },
-    organizationalUnit: { type: String }
+    organizationalUnit: { type: String },
+    metadata: {
+      country: { type: String },
+      state: { type: String },
+      locality: { type: String },
+      alternativeNames: [{ type: String }],
+      fingerprint: { type: String },
+      bits: { type: Number }
+    }
   },
   {
     timestamps: true,

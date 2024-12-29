@@ -1,3 +1,12 @@
+export interface ICertificateMetadata {
+  country: string;
+  state: string;
+  locality: string;
+  alternativeNames: string[];
+  fingerprint: string;
+  bits: number;
+}
+
 export interface ICertificate {
   name: string;
   issuer: string;
@@ -9,4 +18,5 @@ export interface ICertificate {
   organizationalUnit?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  metadata?: ICertificateMetadata;
 }
