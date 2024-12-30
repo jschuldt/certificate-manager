@@ -16,6 +16,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
+import { createCertificate, updateCertificate, deleteCertificate } from '../../../services/api/certificate';
 
 export const CreateCertificate: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -38,9 +39,15 @@ export const CreateCertificate: React.FC = () => {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
+  const [certificateId, setCertificateId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setSaveError(null);
+    setSaveSuccess(false);
   };
 
   const showComingSoonDialog = (feature: string) => {
@@ -58,10 +65,41 @@ export const CreateCertificate: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement certificate creation
-    console.log(formData);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const certificateData = {
+        certManager: {
+          website: formData.website,
+          responsiblePerson: formData.responsiblePerson,
+          alertDate: formData.renewalDueDate.toISOString(),
+          comments: formData.comments
+        }
+      };
+
+      let response;
+      if (certificateId) {
+        // Update existing certificate
+        await updateCertificate(certificateId, certificateData.certManager);
+      } else {
+        // Create new certificate
+        response = await createCertificate(certificateData);
+        setCertificateId(response._id);
+      }
+
+      setSaveSuccess(true);
+      // Show success message
+      setDialogMessage(certificateId ? 'Certificate updated successfully!' : 'Certificate created successfully!');
+      setOpenDialog(true);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'An error occurred while saving');
+      // Show error message
+      setDialogMessage(error instanceof Error ? error.message : 'Failed to save certificate');
+      setOpenDialog(true);
+    }
   };
 
   const handleCancel = () => {
@@ -73,11 +111,43 @@ export const CreateCertificate: React.FC = () => {
     });
   };
 
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!certificateId) return;
+
+    try {
+      await deleteCertificate(certificateId);
+      // Reset form and state after successful delete
+      setFormData({
+        website: '',
+        responsiblePerson: '',
+        renewalDueDate: new Date(),
+        comments: '',
+      });
+      setCertificateId(null);
+      setDeleteDialogOpen(false);
+      setDialogMessage('Certificate deleted successfully!');
+      setOpenDialog(true);
+    } catch (error) {
+      setDeleteDialogOpen(false);
+      setSaveError(error instanceof Error ? error.message : 'Failed to delete certificate');
+      setDialogMessage(error instanceof Error ? error.message : 'Failed to delete certificate');
+      setOpenDialog(true);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+  };
+
   return (
     <Box sx={{ ml: -25, mt: 2 }}>
       <Paper sx={{ p: 3, mb: 2, mr: 8 }}>
         <Typography variant="h4" gutterBottom>
-          Create Certificate
+          {certificateId ? 'Edit Certificate' : 'Create Certificate'}
         </Typography>
       </Paper>
 
@@ -163,8 +233,9 @@ export const CreateCertificate: React.FC = () => {
                         variant="contained"
                         color="primary"
                         fullWidth
+                        disabled={!formData.website} // Disable if required field is empty
                       >
-                        Create
+                        {certificateId ? 'Update' : 'Save'}
                       </Button>
                       <Button
                         variant="contained"
@@ -190,6 +261,16 @@ export const CreateCertificate: React.FC = () => {
                       >
                         Cancel
                       </Button>
+                      {certificateId && (
+                        <Button
+                          variant="contained"
+                          color="error"
+                          fullWidth
+                          onClick={handleDeleteClick}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </Box>
                   </Paper>
                 </Grid>
@@ -248,7 +329,7 @@ export const CreateCertificate: React.FC = () => {
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          {"Coming Soon"}
+          {saveError ? "Error" : "Success"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
@@ -258,6 +339,30 @@ export const CreateCertificate: React.FC = () => {
         <DialogActions>
           <Button onClick={handleDialogClose} autoFocus>
             OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this certificate? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

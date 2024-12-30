@@ -63,6 +63,15 @@ export interface CertificateUpdateParams {
   comments: string;
 }
 
+export interface CreateCertificateData {
+  certManager: {
+    website: string;
+    responsiblePerson: string;
+    alertDate: string;
+    comments: string;
+  };
+}
+
 const checkNetworkStatus = async () => {
   if (!navigator.onLine) {
     throw new Error('No internet connection available');
@@ -313,6 +322,18 @@ export const updateCertificate = async (id: string, data: CertificateUpdateParam
         error.response.data?.message || 
         `Server error (${error.response.status}): ${error.message}`
       );
+    }
+    throw error;
+  }
+};
+
+export const createCertificate = async (data: CreateCertificateData) => {
+  try {
+    const response = await api.post('/api/certificates', data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || 'Failed to create certificate');
     }
     throw error;
   }
