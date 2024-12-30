@@ -1,0 +1,31 @@
+    "bulkUploadSample": [
+        {
+            "name": "Primary Production Certificate",
+            "issuer": "DigiCert Inc",
+            "validFrom": "2024-01-01T00:00:00.000Z",
+            "validTo": "2025-01-01T00:00:00.000Z",
+            "certManager": {
+                "website": "https://cert1.example.com",
+                "responsiblePerson": "John Smith",
+                "renewalDate": "2024-12-01T00:00:00.000Z",
+                "comments": "Primary production certificate"
+            }
+        },
+        {
+            "name": "Backup Certificate",
+            "certManager": {
+                "website": "https://cert2.example.com"
+            }
+        },
+        {
+            "name": "Development API Certificate",
+            "issuer": "GlobalSign",
+            "validFrom": "2024-01-15T00:00:00.000Z",
+            "validTo": "2024-07-15T00:00:00.000Z",
+            "certManager": {
+                "website": "https://dev-api.example.com",
+                "responsiblePerson": "Jane Doe",
+                "renewalDate": "2024-07-01T00:00:00.000Z"
+            }
+        }
+    ]

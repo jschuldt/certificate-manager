@@ -5,9 +5,9 @@ import { mapCertificateInfoToModel } from '../utils/mapper.utils';
 
 const router = Router();
 
-// Welcome route
-router.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the Certificate Manager API' });
+// Change welcome route to alive route
+router.get('/alive', (req, res) => {
+  res.json({ status: 'alive', timestamp: new Date().toISOString() });
 });
 
 // Certificate routes
@@ -18,6 +18,9 @@ router.get('/certificates/expiring/:days', certificateController.getExpiring);
 router.get('/certificates/:id', certificateController.getById);
 router.put('/certificates/:id', certificateController.update);
 router.delete('/certificates/:id', certificateController.delete);
+
+// Add this new route
+router.post('/certificates/bulk', certificateController.bulkCreate);
 
 // Legacy certificate check route
 router.get('/check-certificate', async (req, res) => {

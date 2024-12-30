@@ -1,53 +1,44 @@
-import swaggerJsdoc from 'swagger-jsdoc';
 import { apiDocs } from '../docs/api.docs';
 
-const options: swaggerJsdoc.Options = {
-  swaggerDefinition: {
+const swaggerOptions = {
+  definition: {
     openapi: '3.0.0',
     info: {
       title: 'Certificate Manager API',
       version: '1.0.0',
-      description: 'API for managing SSL certificates',
+      description: 'API for managing SSL certificates'
     },
     servers: [
       {
-        url: 'http://localhost:3443',
-        description: 'Development server',
-      },
-    ],
-    basePath: '/api',
-    tags: [
-      {
-        name: 'General',
-        description: 'General endpoints'
-      },
-      {
-        name: 'Certificate',
-        description: 'Certificate management endpoints'
+        url: '/api',
+        description: 'API server'
       }
     ],
     paths: {
-      '/api': {
-        ...apiDocs.welcome
+      '/alive': {  // Changed from '/' to '/alive'
+        get: apiDocs.paths['/alive'].get
       },
-      '/api/check-certificate': {
-        ...apiDocs.checkCertificate
+      '/check-certificate': {
+        ...apiDocs.paths.checkCertificate
       },
-      '/api/certificates': {
-        ...apiDocs.certificates
+      '/certificates': {
+        ...apiDocs.paths.certificates
       },
-      '/api/certificates/{id}': {
-        ...apiDocs.certificateById
+      '/certificates/{id}': {
+        ...apiDocs.paths.certificateById
       },
-      '/api/certificates/search': {
-        ...apiDocs.certificateSearch
+      '/certificates/search': {
+        ...apiDocs.paths.certificateSearch
       },
-      '/api/certificates/expiring/{days}': {
-        ...apiDocs.certificateExpiring
+      '/certificates/expiring/{days}': {
+        ...apiDocs.paths.certificateExpiring
+      },
+      '/certificates/bulk': {
+        ...apiDocs.paths['/certificates/bulk']
       }
     }
   },
-  apis: ['./src/routes/*.ts', './src/models/*.ts']
+  apis: ['./src/routes/*.ts']
 };
 
-export default options;
+export default swaggerOptions;

@@ -7,8 +7,27 @@ export class CertificateService {
     return await certificate.save();
   }
 
-  async getAllCertificates(): Promise<ICertificateDocument[]> {
-    return await Certificate.find().sort({ createdAt: -1 });
+  async getAllCertificates(page: number = 1, limit: number = 10): Promise<{
+    certificates: ICertificateDocument[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+    const [certificates, total] = await Promise.all([
+      Certificate.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Certificate.countDocuments()
+    ]);
+
+    return {
+      certificates,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async getCertificateById(id: string): Promise<ICertificateDocument | null> {
@@ -61,6 +80,47 @@ export class CertificateService {
         $lte: thresholdDate
       }
     }).sort({ validTo: 1 });
+  }
+
+  async bulkCreateCertificates(certificatesData: ICertificate[]): Promise<{
+    successful: ICertificateDocument[];
+    failed: Array<{ data: ICertificate; error: string }>;
+  }> {
+    const results = {
+      successful: [] as ICertificateDocument[],
+      failed: [] as Array<{ data: ICertificate; error: string }>
+    };
+
+    try {
+      // Process certificates in sequence
+      for (const certData of certificatesData) {
+        try {
+          // Ensure certManager and website exist
+          if (!certData.certManager?.website) {
+            results.failed.push({
+              data: certData,
+              error: 'Missing required certManager.website'
+            });
+            continue;
+          }
+
+          const certificate = new Certificate(certData);
+          const savedCert = await certificate.save();
+          results.successful.push(savedCert);
+        } catch (error) {
+          console.error('Individual certificate save error:', error);
+          results.failed.push({
+            data: certData,
+            error: error instanceof Error ? error.message : 'Unknown error saving certificate'
+          });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Bulk create operation error:', error);
+      throw new Error('Failed to process bulk certificate creation');
+    }
   }
 }
 
