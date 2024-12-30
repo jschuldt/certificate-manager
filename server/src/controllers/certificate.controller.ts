@@ -10,7 +10,10 @@ export const certificateController = {
         return res.status(400).json({ errors: validationErrors });
       }
       const certificate = await certificateService.createCertificate(req.body);
-      res.status(201).json(certificate);
+      res.status(201).json({
+        _id: certificate._id,
+        ...certificate.toObject()
+      });
     } catch (error) {
       res.status(400).json({ error: 'Failed to create certificate' });
     }

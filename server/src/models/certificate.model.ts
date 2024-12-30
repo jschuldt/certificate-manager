@@ -22,6 +22,7 @@ const certificateSchema = new Schema(
       fingerprint: { type: String },
       bits: { type: Number }
     },
+    deleted: { type: Boolean, default: false },
     certManager: {
       website: { type: String, required: true }, // Only this field remains required
       responsiblePerson: { type: String },

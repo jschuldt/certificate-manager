@@ -27,5 +27,6 @@ export interface ICertificate {
   createdAt?: Date;
   updatedAt?: Date;
   metadata?: ICertificateMetadata;
+  deleted?: boolean;
   certManager: ICertificateManager;  // Required object with required website field
 }

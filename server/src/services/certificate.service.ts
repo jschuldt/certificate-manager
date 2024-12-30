@@ -15,11 +15,11 @@ export class CertificateService {
   }> {
     const skip = (page - 1) * limit;
     const [certificates, total] = await Promise.all([
-      Certificate.find()
+      Certificate.find({ deleted: { $ne: true } })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Certificate.countDocuments()
+      Certificate.countDocuments({ deleted: { $ne: true } })
     ]);
 
     return {
@@ -31,7 +31,7 @@ export class CertificateService {
   }
 
   async getCertificateById(id: string): Promise<ICertificateDocument | null> {
-    return await Certificate.findById(id);
+    return await Certificate.findOne({ _id: id, deleted: { $ne: true } });
   }
 
   async updateCertificate(
@@ -46,7 +46,11 @@ export class CertificateService {
   }
 
   async deleteCertificate(id: string): Promise<ICertificateDocument | null> {
-    return await Certificate.findByIdAndDelete(id);
+    return await Certificate.findByIdAndUpdate(
+      id,
+      { $set: { deleted: true } },
+      { new: true }
+    );
   }
 
   async searchCertificates(
@@ -66,14 +70,26 @@ export class CertificateService {
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
     
-    const searchCriteria = [];
-    if (query.name) searchCriteria.push({ name: new RegExp(String(query.name), 'i') });
-    if (query.issuer) searchCriteria.push({ issuer: new RegExp(String(query.issuer), 'i') });
-    if (query.organization) searchCriteria.push({ organization: new RegExp(String(query.organization), 'i') });
-    if (query.website) searchCriteria.push({ 'certManager.website': new RegExp(String(query.website), 'i') });
-    if (query.responsiblePerson) searchCriteria.push({ 'certManager.responsiblePerson': new RegExp(String(query.responsiblePerson), 'i') });
+    // Create search criteria object
+    const searchConditions: any[] = [{ deleted: { $ne: true } }];
+    
+    if (query.name) {
+      searchConditions.push({ name: new RegExp(String(query.name), 'i') });
+    }
+    if (query.issuer) {
+      searchConditions.push({ issuer: new RegExp(String(query.issuer), 'i') });
+    }
+    if (query.organization) {
+      searchConditions.push({ organization: new RegExp(String(query.organization), 'i') });
+    }
+    if (query.website) {
+      searchConditions.push({ 'certManager.website': new RegExp(String(query.website), 'i') });
+    }
+    if (query.responsiblePerson) {
+      searchConditions.push({ 'certManager.responsiblePerson': new RegExp(String(query.responsiblePerson), 'i') });
+    }
 
-    const filter = searchCriteria.length > 0 ? { $or: searchCriteria } : {};
+    const filter = { $and: searchConditions };
 
     const [certificates, total] = await Promise.all([
       Certificate.find(filter)
