@@ -12,6 +12,7 @@ interface CertificateResponse {
 
 export interface CertificateSearchParams {
   name?: string;
+  issuer?: string;
   website?: string;
   organization?: string;
   responsiblePerson?: string;

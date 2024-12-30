@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Box,
   TextField,
@@ -13,65 +13,74 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Pagination,
   TablePagination,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
-import GetAppIcon from '@mui/icons-material/GetApp';  // Add this import
+import GetAppIcon from '@mui/icons-material/GetApp';
+import { searchCertificates, Certificate, CertificateSearchParams } from '../../../services/api/certificate';
 
 const searchFields = [
   { value: 'name', label: 'Certificate Name' },
   { value: 'website', label: 'Website' },
   { value: 'responsiblePerson', label: 'Responsible Party' },
   { value: 'organization', label: 'Organization' },
+  { value: 'issuer', label: 'Issuer' },
 ];
-
-// Mock data
-const mockCertificateData = {
-  name: 'www.cnn.com',
-  issuer: 'DigiCert Inc',
-  validFrom: '2023-01-01',
-  validTo: '2024-01-01',
-  serialNumber: '123456789',
-  subject: 'CN=www.cnn.com',
-  organization: 'CNN',
-  organizationalUnit: 'Digital',
-  website: 'www.cnn.com',
-  responsiblePerson: 'John Doe',
-  renewalDueDate: '2023-12-01',
-  comments: 'Production certificate',
-  lastQueried: '2023-06-15',
-  fingerprint: 'SHA256:1234567890abcdef',
-  bits: 2048,
-  alternativeNames: ['cnn.com', 'www.cnn.com', '*.cnn.com'],
-};
 
 export const QueryCert: React.FC = () => {
   const [searchField, setSearchField] = useState('name');
   const [searchValue, setSearchValue] = useState('');
-  const [showResults, setShowResults] = useState(false);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowResults(true);
-    setTotalRecords(100); // This should come from your API response
+  const handleSearch = useCallback(async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const searchParams: CertificateSearchParams = {
+        page: page + 1, // API uses 1-based pagination
+        limit: rowsPerPage,
+      };
+
+      // Add search field if there's a search value
+      if (searchValue && searchField) {
+        searchParams[searchField as keyof Pick<CertificateSearchParams, 'name' | 'issuer' | 'website' | 'organization' | 'responsiblePerson'>] = searchValue;
+      }
+
+      const response = await searchCertificates(searchParams);
+      setCertificates(response.certificates);
+      setTotalRecords(response.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while searching');
+      setCertificates([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchField, searchValue, page, rowsPerPage]);
+
+  const handleChangePage = async (event: unknown, newPage: number) => {
+    setPage(newPage);
+    // Trigger new search with updated page
+    await handleSearch();
+  };
+
+  const handleChangeRowsPerPage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+    // Trigger new search with updated rows per page
+    await handleSearch();
   };
 
   const handleExportToExcel = () => {
     // TODO: Implement export functionality
     console.log('Exporting to Excel...');
-  };
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
   return (
@@ -112,8 +121,9 @@ export const QueryCert: React.FC = () => {
                   variant="contained"
                   color="primary"
                   size="large"
+                  disabled={loading}
                 >
-                  Search
+                  {loading ? <CircularProgress size={24} /> : 'Search'}
                 </Button>
               </Box>
             </Grid>
@@ -121,7 +131,13 @@ export const QueryCert: React.FC = () => {
         </form>
       </Paper>
 
-      {showResults && (
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, mr: 8 }}>
+          {error}
+        </Alert>
+      )}
+
+      {certificates.length > 0 && (
         <Paper sx={{ p: 3, mb: 2, mr: 8 }}>
           <Box sx={{ 
             display: 'flex', 
@@ -149,37 +165,24 @@ export const QueryCert: React.FC = () => {
                   <TableCell>Certificate Name</TableCell>
                   <TableCell>Website</TableCell>
                   <TableCell>Person Responsible</TableCell>
-                  <TableCell>Alert Notification Date</TableCell>
                   <TableCell>Valid From</TableCell>
                   <TableCell>Valid To</TableCell>
                   <TableCell>Issuer</TableCell>
-                  <TableCell>Serial Number</TableCell>
-                  <TableCell>Subject</TableCell>
-                  <TableCell>Fingerprint</TableCell>
-                  <TableCell>Bits</TableCell>
-                  <TableCell>Alternative Names</TableCell>
+                  <TableCell>Organization</TableCell>
                   <TableCell>Comments</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {[mockCertificateData].slice(
-                  page * rowsPerPage,
-                  page * rowsPerPage + rowsPerPage
-                ).map((row, index) => (
-                  <TableRow hover key={index}>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.website}</TableCell>
-                    <TableCell>{row.responsiblePerson}</TableCell>
-                    <TableCell>{row.renewalDueDate}</TableCell>
-                    <TableCell>{row.validFrom}</TableCell>
-                    <TableCell>{row.validTo}</TableCell>
-                    <TableCell>{row.issuer}</TableCell>
-                    <TableCell>{row.serialNumber}</TableCell>
-                    <TableCell>{row.subject}</TableCell>
-                    <TableCell>{row.fingerprint}</TableCell>
-                    <TableCell>{row.bits}</TableCell>
-                    <TableCell>{row.alternativeNames.join(', ')}</TableCell>
-                    <TableCell>{row.comments}</TableCell>
+                {certificates.map((cert) => (
+                  <TableRow hover key={cert._id}>
+                    <TableCell>{cert.name}</TableCell>
+                    <TableCell>{cert.certManager.website}</TableCell>
+                    <TableCell>{cert.certManager.responsiblePerson}</TableCell>
+                    <TableCell>{new Date(cert.validFrom || '').toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(cert.validTo || '').toLocaleDateString()}</TableCell>
+                    <TableCell>{cert.issuer}</TableCell>
+                    <TableCell>{cert.organization}</TableCell>
+                    <TableCell>{cert.certManager.comments}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
