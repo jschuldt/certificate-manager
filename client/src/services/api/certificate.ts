@@ -10,6 +10,49 @@ interface CertificateResponse {
   timestamp: string;
 }
 
+export interface CertificateSearchParams {
+  name?: string;
+  website?: string;
+  organization?: string;
+  responsiblePerson?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface Certificate {
+  id: string;
+  name: string | null;
+  issuer: string | null;
+  validFrom: string | null;
+  validTo: string | null;
+  serialNumber: string | null;
+  subject: string | null;
+  organization: string | null;
+  organizationalUnit: string | null;
+  certLastQueried: string | null;
+  metadata: {
+    country: string | null;
+    state: string | null;
+    locality: string | null;
+    alternativeNames: string[] | null;
+    fingerprint: string | null;
+    bits: number | null;
+  } | null;
+  certManager: {
+    website: string;
+    responsiblePerson: string;
+    renewalDate: string;
+    comments: string;
+  };
+}
+
+export interface SearchResponse {
+  certificates: Certificate[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 const checkNetworkStatus = async () => {
   if (!navigator.onLine) {
     throw new Error('No internet connection available');
@@ -142,6 +185,36 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
             `Server error (${error.response.status}): ${error.message}`
           );
       }
+    }
+    throw error;
+  }
+};
+
+export const searchCertificates = async (params: CertificateSearchParams): Promise<SearchResponse> => {
+  try {
+    console.log('Attempting to search certificates with params:', params);
+    // Update the endpoint to match the swagger docs
+    const response = await api.get('/api/certificates/search', { 
+      params,
+      // Add timeout and better error handling
+      timeout: 5000,
+    });
+    console.log('Search response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Certificate search error:', {
+      error,
+      status: axios.isAxiosError(error) ? error.response?.status : 'unknown',
+      message: axios.isAxiosError(error) ? error.message : 'Unknown error',
+      url: '/api/certificates/search',
+      params
+    });
+    
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error('Certificate search endpoint not found. Please check API configuration.');
+      }
+      throw new Error(error.response?.data?.message || 'Failed to search certificates');
     }
     throw error;
   }

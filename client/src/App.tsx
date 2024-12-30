@@ -4,7 +4,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { Home } from './features/home/components/Home';
 import { QueryWebsite } from './features/query/components/QueryWebsite';
 import { About } from './features/about/components/About';
-import { CertificateSearch } from './features/inventory/components/CertificateSearch';
+import { CertificateSearch } from './features/certificateSearch/components/CertificateSearch';
 
 const App: React.FC = () => {
   return (

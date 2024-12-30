@@ -4,6 +4,7 @@
             "issuer": "DigiCert Inc",
             "validFrom": "2024-01-01T00:00:00.000Z",
             "validTo": "2025-01-01T00:00:00.000Z",
+            "organization": "test",
             "certManager": {
                 "website": "https://cert1.example.com",
                 "responsiblePerson": "John Smith",

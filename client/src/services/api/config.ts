@@ -1,32 +1,29 @@
 import axios from 'axios';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3443';
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3443',
+  baseURL,
   timeout: 5000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
-// Request interceptor for debugging
+// Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
     if (isDevelopment) {
-      console.log('🚀 Request:', {
+      console.log('🔍 API Request:', {
+        baseURL,
         url: config.url,
         method: config.method,
-        baseURL: config.baseURL,
-        headers: config.headers,
-        params: config.params,
+        params: config.params
       });
     }
     return config;
   },
   (error) => {
     if (isDevelopment) {
-      console.error('❌ Request Error:', error);
+      console.error('🔍 Request Error:', error);
     }
     return Promise.reject(error);
   }
