@@ -35,6 +35,22 @@ const swaggerOptions = {
       },
       '/certificates/bulk': {
         ...apiDocs.paths['/certificates/bulk']
+      },
+      // Add user paths
+      '/users': {
+        ...apiDocs.paths['/users']
+      },
+      '/users/{id}': {
+        ...apiDocs.paths['/users/{id}']
+      },
+      '/users/search': {
+        ...apiDocs.paths['/users/search']
+      }
+    },
+    components: {
+      schemas: {
+        // ...existing schemas...
+        User: apiDocs.components.schemas.User
       }
     }
   },

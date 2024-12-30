@@ -81,15 +81,20 @@ export const apiDocs = {
                       organization: { type: 'string' },
                       organizationalUnit: { type: 'string' },
                       certLastQueried: { type: 'string', format: 'date-time' },
-                      metadataCountry: { type: 'string' },
-                      metadataState: { type: 'string' },
-                      metadataLocality: { type: 'string' },
-                      metadataAlternativeNames: {
-                        type: 'array',
-                        items: { type: 'string' }
+                      metadata: {
+                        type: 'object',
+                        properties: {
+                          country: { type: 'string' },
+                          state: { type: 'string' },
+                          locality: { type: 'string' },
+                          alternativeNames: {
+                            type: 'array',
+                            items: { type: 'string' }
+                          },
+                          fingerprint: { type: 'string' },
+                          bits: { type: 'number' }
+                        }
                       },
-                      metadataFingerprint: { type: 'string' },
-                      metadataBits: { type: 'number' },
                       certManager: {
                         type: 'object',
                         required: ['website'],
@@ -118,7 +123,7 @@ export const apiDocs = {
         parameters: [{
           in: 'query',
           name: 'page',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 1,
             minimum: 1
@@ -127,7 +132,7 @@ export const apiDocs = {
         }, {
           in: 'query',
           name: 'limit',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 10,
             minimum: 1,
@@ -211,15 +216,20 @@ export const apiDocs = {
                   organization: { type: 'string' },
                   organizationalUnit: { type: 'string' },
                   certLastQueried: { type: 'string', format: 'date-time' },
-                  metadataCountry: { type: 'string' },
-                  metadataState: { type: 'string' },
-                  metadataLocality: { type: 'string' },
-                  metadataAlternativeNames: {
-                    type: 'array',
-                    items: { type: 'string' }
+                  metadata: {
+                    type: 'object',
+                    properties: {
+                      country: { type: 'string' },
+                      state: { type: 'string' },
+                      locality: { type: 'string' },
+                      alternativeNames: {
+                        type: 'array',
+                        items: { type: 'string' }
+                      },
+                      fingerprint: { type: 'string' },
+                      bits: { type: 'number' }
+                    }
                   },
-                  metadataFingerprint: { type: 'string' },
-                  metadataBits: { type: 'number' },
                   certManager: {
                     type: 'object',
                     properties: {
@@ -282,7 +292,7 @@ export const apiDocs = {
         }, {
           in: 'query',
           name: 'page',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 1,
             minimum: 1
@@ -291,7 +301,7 @@ export const apiDocs = {
         }, {
           in: 'query',
           name: 'limit',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 10,
             minimum: 1,
@@ -339,7 +349,7 @@ export const apiDocs = {
         parameters: [{
           in: 'path',
           name: 'days',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 30
           },
@@ -347,7 +357,7 @@ export const apiDocs = {
         }, {
           in: 'query',
           name: 'page',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 1,
             minimum: 1
@@ -356,7 +366,7 @@ export const apiDocs = {
         }, {
           in: 'query',
           name: 'limit',
-          schema: { 
+          schema: {
             type: 'integer',
             default: 10,
             minimum: 1,
@@ -419,11 +429,16 @@ export const apiDocs = {
                     subject: { type: 'string' },
                     organization: { type: 'string' },
                     organizationalUnit: { type: 'string' },
-                    metadataWebsite: { type: 'string' },
-                    metadataResponsiblePerson: { type: 'string' },
-                    metadataRenewalDate: { type: 'string', format: 'date-time' },
-                    metadataComments: { type: 'string' },
                     certLastQueried: { type: 'string', format: 'date-time' },
+                    metadata: {
+                      type: 'object',
+                      properties: {
+                        website: { type: 'string' },
+                        responsiblePerson: { type: 'string' },
+                        renewalDate: { type: 'string', format: 'date-time' },
+                        comments: { type: 'string' }
+                      }
+                    },
                     certManager: {
                       type: 'object',
                       required: ['website'],
@@ -451,7 +466,7 @@ export const apiDocs = {
                     message: { type: 'string' },
                     successful: {
                       type: 'array',
-                      items: { 
+                      items: {
                         $ref: '#/components/schemas/Certificate'  // Reference to certificate schema
                       }
                     },
@@ -471,6 +486,229 @@ export const apiDocs = {
             }
           },
           400: { description: 'Invalid input' }
+        }
+      }
+    },
+    '/users': {
+      post: {
+        tags: ['Users'],
+        summary: 'Create a new user',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['firstName', 'lastName', 'email'],
+                properties: {
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  email: { type: 'string', format: 'email' },
+                  notificationPreferences: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  isActive: { type: 'boolean', default: true }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: {
+            description: 'User created successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/User'
+                }
+              }
+            }
+          },
+          400: { description: 'Invalid input' }
+        }
+      },
+      get: {
+        tags: ['Users'],
+        summary: 'Get all users',
+        parameters: [{
+          in: 'query',
+          name: 'page',
+          schema: {
+            type: 'integer',
+            default: 1,
+            minimum: 1
+          },
+          description: 'Page number'
+        }, {
+          in: 'query',
+          name: 'limit',
+          schema: {
+            type: 'integer',
+            default: 10,
+            minimum: 1,
+            maximum: 100
+          },
+          description: 'Number of records per page'
+        }],
+        responses: {
+          200: {
+            description: 'List of users retrieved successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    users: {
+                      type: 'array',
+                      items: {
+                        $ref: '#/components/schemas/User'
+                      }
+                    },
+                    total: { type: 'integer' }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/users/{id}': {
+      get: {
+        tags: ['Users'],
+        summary: 'Get user by ID',
+        parameters: [{
+          in: 'path',
+          name: 'id',
+          required: true,
+          schema: { type: 'string' }
+        }],
+        responses: {
+          200: {
+            description: 'User found',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/User'
+                }
+              }
+            }
+          },
+          404: { description: 'User not found' }
+        }
+      },
+      put: {
+        tags: ['Users'],
+        summary: 'Update user by ID',
+        parameters: [{
+          in: 'path',
+          name: 'id',
+          required: true,
+          schema: { type: 'string' }
+        }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  email: { type: 'string', format: 'email' },
+                  notificationPreferences: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  isActive: { type: 'boolean' }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'User updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/User'
+                }
+              }
+            }
+          },
+          404: { description: 'User not found' }
+        }
+      },
+      delete: {
+        tags: ['Users'],
+        summary: 'Delete user by ID',
+        parameters: [{
+          in: 'path',
+          name: 'id',
+          required: true,
+          schema: { type: 'string' }
+        }],
+        responses: {
+          204: { description: 'User deleted successfully' },
+          404: { description: 'User not found' }
+        }
+      }
+    },
+    '/users/search': {
+      get: {
+        tags: ['Users'],
+        summary: 'Search users',
+        parameters: [{
+          in: 'query',
+          name: 'firstName',
+          schema: { type: 'string' }
+        }, {
+          in: 'query',
+          name: 'lastName',
+          schema: { type: 'string' }
+        }, {
+          in: 'query',
+          name: 'email',
+          schema: { type: 'string' }
+        }],
+        responses: {
+          200: {
+            description: 'Search results',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/User'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      // ...existing code...
+      User: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+          notificationPreferences: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          isActive: { type: 'boolean' },
+          isDeleted: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
         }
       }
     }
