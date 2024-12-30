@@ -21,6 +21,7 @@ import {
 import { visuallyHidden } from '@mui/utils';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import { searchCertificates, Certificate, CertificateSearchParams } from '../../../services/api/certificate';
+import * as XLSX from 'xlsx';
 
 // Add interface for sort
 interface SortConfig {
@@ -139,8 +140,46 @@ export const QueryCert: React.FC = () => {
   };
 
   const handleExportToExcel = () => {
-    // TODO: Implement export functionality
-    console.log('Exporting to Excel...');
+    try {
+      // Transform the data for Excel
+      const excelData = certificates.map(cert => ({
+        'Certificate Name': cert.name || '',
+        'Website': cert.certManager.website || '',
+        'Person Responsible': cert.certManager.responsiblePerson || '',
+        'Valid From': cert.validFrom ? new Date(cert.validFrom).toLocaleDateString() : '',
+        'Valid To': cert.validTo ? new Date(cert.validTo).toLocaleDateString() : '',
+        'Issuer': cert.issuer || '',
+        'Organization': cert.organization || '',
+        'Comments': cert.certManager.comments || '',
+        'Serial Number': cert.serialNumber || '',
+        'Subject': cert.subject || '',
+        'Organizational Unit': cert.organizationalUnit || '',
+        'Last Queried': cert.certLastQueried ? new Date(cert.certLastQueried).toLocaleDateString() : '',
+        'Country': cert.metadata?.country || '',
+        'State': cert.metadata?.state || '',
+        'Locality': cert.metadata?.locality || '',
+        'Alternative Names': cert.metadata?.alternativeNames?.join(', ') || '',
+        'Fingerprint': cert.metadata?.fingerprint || '',
+        'Bits': cert.metadata?.bits || ''
+      }));
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Certificates');
+
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const fileName = `certificates_export_${date}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, fileName);
+    } catch (error) {
+      console.error('Export error:', error);
+      setError('Failed to export data to Excel');
+    }
   };
 
   // Add sort handler
@@ -247,6 +286,7 @@ export const QueryCert: React.FC = () => {
               size="medium"
               onClick={handleExportToExcel}
               startIcon={<GetAppIcon />}
+              disabled={certificates.length === 0}
             >
               Export to Excel
             </Button>
