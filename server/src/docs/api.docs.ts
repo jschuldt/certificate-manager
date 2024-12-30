@@ -67,33 +67,42 @@ export const apiDocs = {
           content: {
             'application/json': {
               schema: {
-                type: 'object',
-                required: ['certManager'],
-                properties: {
-                  name: { type: 'string' },
-                  issuer: { type: 'string' },
-                  validFrom: { type: 'string', format: 'date-time' },
-                  validTo: { type: 'string', format: 'date-time' },
-                  serialNumber: { type: 'string' },
-                  subject: { type: 'string' },
-                  organization: { type: 'string' },
-                  organizationalUnit: { type: 'string' },
-                  metadataWebsite: { type: 'string' },
-                  metadataResponsiblePerson: { type: 'string' },
-                  metadataRenewalDate: { type: 'string', format: 'date-time' },
-                  metadataComments: { type: 'string' },
-                  certLastQueried: { type: 'string', format: 'date-time' },
-                  certManager: {
+                oneOf: [
+                  {
                     type: 'object',
-                    required: ['website'],
+                    required: ['certManager'],
                     properties: {
-                      website: { type: 'string' },
-                      responsiblePerson: { type: 'string' },
-                      alertDate: { type: 'string', format: 'date-time' },
-                      comments: { type: 'string' }
+                      name: { type: 'string' },
+                      issuer: { type: 'string' },
+                      validFrom: { type: 'string', format: 'date-time' },
+                      validTo: { type: 'string', format: 'date-time' },
+                      serialNumber: { type: 'string' },
+                      subject: { type: 'string' },
+                      organization: { type: 'string' },
+                      organizationalUnit: { type: 'string' },
+                      certLastQueried: { type: 'string', format: 'date-time' },
+                      metadataCountry: { type: 'string' },
+                      metadataState: { type: 'string' },
+                      metadataLocality: { type: 'string' },
+                      metadataAlternativeNames: {
+                        type: 'array',
+                        items: { type: 'string' }
+                      },
+                      metadataFingerprint: { type: 'string' },
+                      metadataBits: { type: 'number' },
+                      certManager: {
+                        type: 'object',
+                        required: ['website'],
+                        properties: {
+                          website: { type: 'string' },
+                          responsiblePerson: { type: 'string' },
+                          alertDate: { type: 'string', format: 'date-time' },
+                          comments: { type: 'string' }
+                        }
+                      }
                     }
                   }
-                }
+                ]
               }
             }
           }
@@ -201,11 +210,16 @@ export const apiDocs = {
                   subject: { type: 'string' },
                   organization: { type: 'string' },
                   organizationalUnit: { type: 'string' },
-                  metadataWebsite: { type: 'string' },
-                  metadataResponsiblePerson: { type: 'string' },
-                  metadataRenewalDate: { type: 'string', format: 'date-time' },
-                  metadataComments: { type: 'string' },
                   certLastQueried: { type: 'string', format: 'date-time' },
+                  metadataCountry: { type: 'string' },
+                  metadataState: { type: 'string' },
+                  metadataLocality: { type: 'string' },
+                  metadataAlternativeNames: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  },
+                  metadataFingerprint: { type: 'string' },
+                  metadataBits: { type: 'number' },
                   certManager: {
                     type: 'object',
                     properties: {

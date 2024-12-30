@@ -2,6 +2,34 @@ import { Request, Response } from 'express';
 import { certificateService } from '../services/certificate.service';
 import { validateCertificateInput, isValidMongoId } from '../utils/validation.utils';
 
+const transformRequestToSchema = (body: any) => {
+  const {
+    metadataCountry,
+    metadataState,
+    metadataLocality,
+    metadataAlternativeNames,
+    metadataFingerprint,
+    metadataBits,
+    metadataWebsite,
+    metadataResponsiblePerson,
+    metadataRenewalDate,
+    metadataComments,
+    ...rest
+  } = body;
+
+  return {
+    ...rest,
+    metadata: {
+      country: metadataCountry,
+      state: metadataState,
+      locality: metadataLocality,
+      alternativeNames: metadataAlternativeNames,
+      fingerprint: metadataFingerprint,
+      bits: metadataBits
+    }
+  };
+};
+
 export const certificateController = {
   async create(req: Request, res: Response) {
     try {
@@ -9,7 +37,8 @@ export const certificateController = {
       if (validationErrors.length > 0) {
         return res.status(400).json({ errors: validationErrors });
       }
-      const certificate = await certificateService.createCertificate(req.body);
+      const transformedData = transformRequestToSchema(req.body);
+      const certificate = await certificateService.createCertificate(transformedData);
       res.status(201).json({
         _id: certificate._id,
         ...certificate.toObject()
@@ -50,7 +79,8 @@ export const certificateController = {
       if (validationErrors.length > 0) {
         return res.status(400).json({ errors: validationErrors });
       }
-      const certificate = await certificateService.updateCertificate(req.params.id, req.body);
+      const transformedData = transformRequestToSchema(req.body);
+      const certificate = await certificateService.updateCertificate(req.params.id, transformedData);
       if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
       res.json(certificate);
     } catch (error) {
@@ -110,7 +140,8 @@ export const certificateController = {
         return res.status(400).json({ errors: validationErrors });
       }
 
-      const result = await certificateService.bulkCreateCertificates(req.body);
+      const transformedData = req.body.map(transformRequestToSchema);
+      const result = await certificateService.bulkCreateCertificates(transformedData);
       res.status(201).json({
         message: `Successfully created ${result.successful.length} certificates, ${result.failed.length} failed`,
         ...result
