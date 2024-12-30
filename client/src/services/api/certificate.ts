@@ -54,6 +54,12 @@ export interface SearchResponse {
   totalPages: number;
 }
 
+export interface CertificateUpdateParams {
+  website: string;
+  responsiblePerson?: string;
+  comments?: string;
+}
+
 const checkNetworkStatus = async () => {
   if (!navigator.onLine) {
     throw new Error('No internet connection available');
@@ -277,5 +283,34 @@ export const deleteCertificate = async (id: string): Promise<void> => {
       );
     }
     throw new Error('Failed to delete certificate');
+  }
+};
+
+export const updateCertificate = async (id: string, data: CertificateUpdateParams): Promise<void> => {
+  if (!id) {
+    throw new Error('Invalid certificate ID');
+  }
+
+  try {
+    const response = await api.put(`/api/certificates/${id}`, {
+      certManager: {
+        ...data
+      }
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (!error.response) {
+        throw new Error('Network error: Unable to reach the server');
+      }
+      throw new Error(
+        error.response.data?.message || 
+        `Server error (${error.response.status}): ${error.message}`
+      );
+    }
+    throw error;
   }
 };

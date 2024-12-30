@@ -19,7 +19,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { searchCertificates, type Certificate, type SearchResponse, deleteCertificate } from '../../../services/api/certificate';
+import { searchCertificates, updateCertificate, type Certificate, type SearchResponse, deleteCertificate } from '../../../services/api/certificate';
 import { parseISO, format } from 'date-fns';
 import { format as formatTz, utcToZonedTime } from 'date-fns-tz'; // Add date-fns-tz import
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -84,6 +84,7 @@ export const CertificateSearch: React.FC = () => {
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ ...searchParams, [field]: event.target.value });
@@ -222,10 +223,39 @@ export const CertificateSearch: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement API call to save certificate
-    console.log(formData);
+    
+    // Validate required website field
+    if (!formData.website.trim()) {
+      setError('Website is required');
+      return;
+    }
+
+    // Check if we have a certificate to update
+    if (!selectedCertificate?._id) {
+      setError('No certificate selected for update');
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      await updateCertificate(selectedCertificate._id, {
+        website: formData.website.trim(),
+        responsiblePerson: formData.responsiblePerson.trim(),
+        comments: formData.comments.trim()
+      });
+
+      // Show success message
+      setError('Certificate updated successfully');
+    } catch (err) {
+      console.error('Update failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update certificate');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -796,8 +826,10 @@ export const CertificateSearch: React.FC = () => {
                               variant="contained"
                               color="primary"
                               fullWidth
+                              disabled={isSaving}
+                              startIcon={isSaving ? <CircularProgress size={20} /> : null}
                             >
-                              Save Changes
+                              {isSaving ? 'Saving...' : 'Save Changes'}
                             </Button>
                             <Button
                               variant="contained"
