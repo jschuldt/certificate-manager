@@ -67,8 +67,10 @@ export const certificateController = {
 
   async search(req: Request, res: Response) {
     try {
-      const certificates = await certificateService.searchCertificates(req.query);
-      res.json(certificates);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const result = await certificateService.searchCertificates({ ...req.query, page, limit });
+      res.json(result);
     } catch (error) {
       res.status(500).json({ error: 'Failed to search certificates' });
     }
@@ -77,8 +79,10 @@ export const certificateController = {
   async getExpiring(req: Request, res: Response) {
     try {
       const days = parseInt(req.params.days) || 30;
-      const certificates = await certificateService.getExpiringCertificates(days);
-      res.json(certificates);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const result = await certificateService.getExpiringCertificates(days, page, limit);
+      res.json(result);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch expiring certificates' });
     }

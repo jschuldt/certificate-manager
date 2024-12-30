@@ -261,9 +261,59 @@ export const apiDocs = {
           in: 'query',
           name: 'website',  // Changed from certManager.website to website
           schema: { type: 'string' }
+        }, {
+          in: 'query',
+          name: 'responsiblePerson',
+          schema: { type: 'string' }
+        }, {
+          in: 'query',
+          name: 'page',
+          schema: { 
+            type: 'integer',
+            default: 1,
+            minimum: 1
+          },
+          description: 'Page number'
+        }, {
+          in: 'query',
+          name: 'limit',
+          schema: { 
+            type: 'integer',
+            default: 10,
+            minimum: 1,
+            maximum: 100
+          },
+          description: 'Number of records per page'
         }],
         responses: {
-          200: { description: 'Search results' },
+          200: {
+            description: 'Search results',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    certificates: {
+                      type: 'array',
+                      items: { type: 'object' }
+                    },
+                    total: {
+                      type: 'integer',
+                      description: 'Total number of records'
+                    },
+                    page: {
+                      type: 'integer',
+                      description: 'Current page number'
+                    },
+                    totalPages: {
+                      type: 'integer',
+                      description: 'Total number of pages'
+                    }
+                  }
+                }
+              }
+            }
+          },
           500: { description: 'Server error' }
         }
       }
@@ -280,9 +330,55 @@ export const apiDocs = {
             default: 30
           },
           description: 'Number of days threshold'
+        }, {
+          in: 'query',
+          name: 'page',
+          schema: { 
+            type: 'integer',
+            default: 1,
+            minimum: 1
+          },
+          description: 'Page number'
+        }, {
+          in: 'query',
+          name: 'limit',
+          schema: { 
+            type: 'integer',
+            default: 10,
+            minimum: 1,
+            maximum: 100
+          },
+          description: 'Number of records per page'
         }],
         responses: {
-          200: { description: 'List of expiring certificates' },
+          200: {
+            description: 'List of expiring certificates',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    certificates: {
+                      type: 'array',
+                      items: { type: 'object' }
+                    },
+                    total: {
+                      type: 'integer',
+                      description: 'Total number of records'
+                    },
+                    page: {
+                      type: 'integer',
+                      description: 'Current page number'
+                    },
+                    totalPages: {
+                      type: 'integer',
+                      description: 'Total number of pages'
+                    }
+                  }
+                }
+              }
+            }
+          },
           500: { description: 'Server error' }
         }
       }

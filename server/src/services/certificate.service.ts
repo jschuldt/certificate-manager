@@ -49,37 +49,83 @@ export class CertificateService {
     return await Certificate.findByIdAndDelete(id);
   }
 
-  async searchCertificates(query: Partial<ICertificate> & { website?: string }): Promise<ICertificateDocument[]> {
-    const searchCriteria = [];
+  async searchCertificates(
+    query: Partial<ICertificate> & { 
+      website?: string;
+      responsiblePerson?: string;
+      page?: number;
+      limit?: number;
+    }
+  ): Promise<{
+    certificates: ICertificateDocument[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
     
-    if (query.name) {
-      searchCriteria.push({ name: new RegExp(String(query.name), 'i') });
-    }
-    if (query.issuer) {
-      searchCriteria.push({ issuer: new RegExp(String(query.issuer), 'i') });
-    }
-    if (query.organization) {
-      searchCriteria.push({ organization: new RegExp(String(query.organization), 'i') });
-    }
-    if (query.website) {
-      searchCriteria.push({ 'certManager.website': new RegExp(String(query.website), 'i') });
-    }
+    const searchCriteria = [];
+    if (query.name) searchCriteria.push({ name: new RegExp(String(query.name), 'i') });
+    if (query.issuer) searchCriteria.push({ issuer: new RegExp(String(query.issuer), 'i') });
+    if (query.organization) searchCriteria.push({ organization: new RegExp(String(query.organization), 'i') });
+    if (query.website) searchCriteria.push({ 'certManager.website': new RegExp(String(query.website), 'i') });
+    if (query.responsiblePerson) searchCriteria.push({ 'certManager.responsiblePerson': new RegExp(String(query.responsiblePerson), 'i') });
 
-    return await Certificate.find(
-      searchCriteria.length > 0 ? { $or: searchCriteria } : {}
-    );
+    const filter = searchCriteria.length > 0 ? { $or: searchCriteria } : {};
+
+    const [certificates, total] = await Promise.all([
+      Certificate.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Certificate.countDocuments(filter)
+    ]);
+
+    return {
+      certificates,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
-  async getExpiringCertificates(daysThreshold: number): Promise<ICertificateDocument[]> {
+  async getExpiringCertificates(
+    daysThreshold: number,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    certificates: ICertificateDocument[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
     const thresholdDate = new Date();
     thresholdDate.setDate(thresholdDate.getDate() + daysThreshold);
     
-    return await Certificate.find({
+    const filter = {
       validTo: {
         $gte: new Date(),
         $lte: thresholdDate
       }
-    }).sort({ validTo: 1 });
+    };
+
+    const [certificates, total] = await Promise.all([
+      Certificate.find(filter)
+        .sort({ validTo: 1 })
+        .skip(skip)
+        .limit(limit),
+      Certificate.countDocuments(filter)
+    ]);
+
+    return {
+      certificates,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async bulkCreateCertificates(certificatesData: ICertificate[]): Promise<{
