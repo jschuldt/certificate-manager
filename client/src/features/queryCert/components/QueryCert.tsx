@@ -16,9 +16,68 @@ import {
   TablePagination,
   CircularProgress,
   Alert,
+  TableSortLabel,
 } from '@mui/material';
+import { visuallyHidden } from '@mui/utils';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import { searchCertificates, Certificate, CertificateSearchParams } from '../../../services/api/certificate';
+
+// Add interface for sort
+interface SortConfig {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+// Define column interface
+interface Column {
+  id: string;
+  label: string;
+  getValue: (cert: Certificate) => string | number | null;
+}
+
+// Define sortable columns
+const columns: Column[] = [
+  { 
+    id: 'name',
+    label: 'Certificate Name',
+    getValue: (cert) => cert.name
+  },
+  { 
+    id: 'website',
+    label: 'Website',
+    getValue: (cert) => cert.certManager.website
+  },
+  { 
+    id: 'responsiblePerson',
+    label: 'Person Responsible',
+    getValue: (cert) => cert.certManager.responsiblePerson
+  },
+  { 
+    id: 'validFrom',
+    label: 'Valid From',
+    getValue: (cert) => cert.validFrom
+  },
+  { 
+    id: 'validTo',
+    label: 'Valid To',
+    getValue: (cert) => cert.validTo
+  },
+  { 
+    id: 'issuer',
+    label: 'Issuer',
+    getValue: (cert) => cert.issuer
+  },
+  { 
+    id: 'organization',
+    label: 'Organization',
+    getValue: (cert) => cert.organization
+  },
+  { 
+    id: 'comments',
+    label: 'Comments',
+    getValue: (cert) => cert.certManager.comments
+  }
+];
 
 const searchFields = [
   { value: 'name', label: 'Certificate Name' },
@@ -37,6 +96,7 @@ export const QueryCert: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [sort, setSort] = useState<SortConfig>({ field: '', direction: 'asc' });
 
   const handleSearch = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -81,6 +141,33 @@ export const QueryCert: React.FC = () => {
   const handleExportToExcel = () => {
     // TODO: Implement export functionality
     console.log('Exporting to Excel...');
+  };
+
+  // Add sort handler
+  const handleSort = (columnId: string) => {
+    setSort(prevSort => ({
+      field: columnId,
+      direction: prevSort.field === columnId && prevSort.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Add sort function
+  const sortData = (data: Certificate[]) => {
+    if (!sort.field) return data;
+
+    return [...data].sort((a, b) => {
+      const column = columns.find(col => col.id === sort.field);
+      if (!column) return 0;
+
+      const aValue = column.getValue(a) || '';
+      const bValue = column.getValue(b) || '';
+
+      if (sort.direction === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return bValue < aValue ? -1 : bValue > aValue ? 1 : 0;
+      }
+    });
   };
 
   return (
@@ -137,6 +224,12 @@ export const QueryCert: React.FC = () => {
         </Alert>
       )}
 
+      {!loading && !error && searchValue && certificates.length === 0 && (
+        <Alert severity="info" sx={{ mb: 2, mr: 8 }}>
+          No certificates found matching your search criteria
+        </Alert>
+      )}
+
       {certificates.length > 0 && (
         <Paper sx={{ p: 3, mb: 2, mr: 8 }}>
           <Box sx={{ 
@@ -162,27 +255,37 @@ export const QueryCert: React.FC = () => {
             <Table sx={{ minWidth: 650 }} size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Certificate Name</TableCell>
-                  <TableCell>Website</TableCell>
-                  <TableCell>Person Responsible</TableCell>
-                  <TableCell>Valid From</TableCell>
-                  <TableCell>Valid To</TableCell>
-                  <TableCell>Issuer</TableCell>
-                  <TableCell>Organization</TableCell>
-                  <TableCell>Comments</TableCell>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      sortDirection={sort.field === column.id ? sort.direction : false}
+                    >
+                      <TableSortLabel
+                        active={sort.field === column.id}
+                        direction={sort.field === column.id ? sort.direction : 'asc'}
+                        onClick={() => handleSort(column.id)}
+                      >
+                        {column.label}
+                        {sort.field === column.id && (
+                          <Box component="span" sx={visuallyHidden}>
+                            {sort.direction === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                          </Box>
+                        )}
+                      </TableSortLabel>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
-                {certificates.map((cert) => (
+                {sortData(certificates).map((cert) => (
                   <TableRow hover key={cert._id}>
-                    <TableCell>{cert.name}</TableCell>
-                    <TableCell>{cert.certManager.website}</TableCell>
-                    <TableCell>{cert.certManager.responsiblePerson}</TableCell>
-                    <TableCell>{new Date(cert.validFrom || '').toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(cert.validTo || '').toLocaleDateString()}</TableCell>
-                    <TableCell>{cert.issuer}</TableCell>
-                    <TableCell>{cert.organization}</TableCell>
-                    <TableCell>{cert.certManager.comments}</TableCell>
+                    {columns.map(column => (
+                      <TableCell key={`${cert._id}-${column.id}`}>
+                        {column.id.includes('date')
+                          ? new Date(column.getValue(cert) || '').toLocaleDateString()
+                          : column.getValue(cert)}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))}
               </TableBody>
