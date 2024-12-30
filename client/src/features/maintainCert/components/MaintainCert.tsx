@@ -331,7 +331,7 @@ export const CertificateSearch: React.FC = () => {
           <Box 
             key={`${field.label}-${index}`}
             sx={{ 
-              minHeight: field.type === 'date' ? '40px' : '32px',  // Fixed heights
+              minHeight: '32px',  // Standardize height for all fields
               width: '100%'
             }}
           >
@@ -351,10 +351,10 @@ export const CertificateSearch: React.FC = () => {
                       variant="outlined"
                       size="small"
                       sx={{ 
-                        height: '40px',  // Fixed height
+                        height: '32px',  // Match text field height
                         backgroundColor: '#f5f5f5',
                         '& .MuiOutlinedInput-root': {
-                          height: '40px',
+                          height: '32px',
                           backgroundColor: '#f5f5f5'
                         },
                         '& .MuiInputLabel-root': {
@@ -366,7 +366,8 @@ export const CertificateSearch: React.FC = () => {
                         },
                         '& .MuiOutlinedInput-input': {
                           fontSize: '0.8rem',
-                          padding: '8px'
+                          padding: '6px 8px',
+                          height: '18px'  // Adjust input height
                         }
                       }}
                     />
