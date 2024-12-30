@@ -26,7 +26,7 @@ const certificateSchema = new Schema(
     certManager: {
       website: { type: String, required: true }, // Only this field remains required
       responsiblePerson: { type: String },
-      renewalDate: { type: Date },
+      alertDate: { type: Date },
       comments: { type: String }
     }
   },

@@ -89,7 +89,7 @@ export const apiDocs = {
                     properties: {
                       website: { type: 'string' },
                       responsiblePerson: { type: 'string' },
-                      renewalDate: { type: 'string', format: 'date-time' },
+                      alertDate: { type: 'string', format: 'date-time' },
                       comments: { type: 'string' }
                     }
                   }
@@ -211,7 +211,7 @@ export const apiDocs = {
                     properties: {
                       website: { type: 'string' },
                       responsiblePerson: { type: 'string' },
-                      renewalDate: { type: 'string', format: 'date-time' },
+                      alertDate: { type: 'string', format: 'date-time' },
                       comments: { type: 'string' }
                     }
                   }
@@ -416,7 +416,7 @@ export const apiDocs = {
                       properties: {
                         website: { type: 'string' },
                         responsiblePerson: { type: 'string' },
-                        renewalDate: { type: 'string', format: 'date-time' },
+                        alertDate: { type: 'string', format: 'date-time' },
                         comments: { type: 'string' }
                       }
                     }

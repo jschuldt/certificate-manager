@@ -245,6 +245,7 @@ export const CertificateSearch: React.FC = () => {
       await updateCertificate(selectedCertificate._id, {
         website: formData.website.trim(),
         responsiblePerson: formData.responsiblePerson.trim(),
+        alertDate: formData.renewalDueDate.toISOString(),  // Changed to use alertDate
         comments: formData.comments.trim()
       });
 
@@ -283,9 +284,9 @@ export const CertificateSearch: React.FC = () => {
           organizationalUnit: selectedCertificate.organizationalUnit || '',
           website: selectedCertificate.certManager?.website || '',
           responsiblePerson: selectedCertificate.certManager?.responsiblePerson || '',
-          renewalDueDate: selectedCertificate.certManager?.renewalDate ? 
-            safeParseDate(selectedCertificate.certManager.renewalDate) : 
-            new Date(),
+          renewalDueDate: selectedCertificate.certManager?.alertDate ? 
+            safeParseDate(selectedCertificate.certManager.alertDate) : 
+            new Date(),  // Using alertDate directly
           comments: selectedCertificate.certManager?.comments || '',
           lastUpdated: new Date()
         };

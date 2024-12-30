@@ -39,12 +39,7 @@ export interface Certificate {
     fingerprint: string | null;
     bits: number | null;
   } | null;
-  certManager: {
-    website: string;
-    responsiblePerson: string;
-    renewalDate: string;
-    comments: string;
-  };
+  certManager: CertManager;
 }
 
 export interface SearchResponse {
@@ -54,10 +49,18 @@ export interface SearchResponse {
   totalPages: number;
 }
 
+export interface CertManager {
+  website: string;
+  responsiblePerson: string;
+  alertDate?: string;
+  comments: string;
+}
+
 export interface CertificateUpdateParams {
   website: string;
-  responsiblePerson?: string;
-  comments?: string;
+  responsiblePerson: string;
+  alertDate?: string;
+  comments: string;
 }
 
 const checkNetworkStatus = async () => {
