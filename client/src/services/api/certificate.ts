@@ -20,7 +20,8 @@ export interface CertificateSearchParams {
 }
 
 export interface Certificate {
-  id: string;
+  _id: string;  // Change from id to _id to match MongoDB
+  id: string;   // Keep this for backward compatibility
   name: string | null;
   issuer: string | null;
   validFrom: string | null;
@@ -217,5 +218,64 @@ export const searchCertificates = async (params: CertificateSearchParams): Promi
       throw new Error(error.response?.data?.message || 'Failed to search certificates');
     }
     throw error;
+  }
+};
+
+export const deleteCertificate = async (id: string): Promise<void> => {
+  if (!id) {
+    console.error('Delete called with invalid ID:', id);
+    throw new Error('Invalid certificate ID');
+  }
+
+  if (isDevelopment) {
+    console.log('🔍 Delete request initiated for certificate:', {
+      id,
+      requestUrl: `/api/certificates/${id}`
+    });
+  }
+
+  try {
+    const response = await api.delete(`/api/certificates/${id}`, {
+      timeout: 5000, // Add timeout
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (isDevelopment) {
+      console.log('🔍 Delete response:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        id
+      });
+    }
+
+    if (response.status !== 204 && response.status !== 200) {
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+  } catch (error) {
+    if (isDevelopment) {
+      console.error('🔍 Delete error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        isAxiosError: axios.isAxiosError(error),
+        response: axios.isAxiosError(error) ? error.response : null
+      });
+    }
+    
+    if (axios.isAxiosError(error)) {
+      if (!error.response) {
+        throw new Error('Network error: Unable to reach the server');
+      }
+      if (error.response.status === 404) {
+        throw new Error('Certificate not found');
+      }
+      throw new Error(
+        error.response.data?.message || 
+        `Server error (${error.response.status}): ${error.message}`
+      );
+    }
+    throw new Error('Failed to delete certificate');
   }
 };

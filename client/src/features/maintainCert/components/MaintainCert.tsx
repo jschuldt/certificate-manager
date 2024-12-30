@@ -19,7 +19,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { searchCertificates, type Certificate, type SearchResponse } from '../../../services/api/certificate';
+import { searchCertificates, type Certificate, type SearchResponse, deleteCertificate } from '../../../services/api/certificate';
 import { parseISO, format } from 'date-fns';
 import { format as formatTz, utcToZonedTime } from 'date-fns-tz'; // Add date-fns-tz import
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -43,7 +43,25 @@ export const CertificateSearch: React.FC = () => {
   });
 
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+
+  // First, update the form data interface
+  interface FormData {
+    name: string;
+    issuer: string;
+    validFrom: Date;
+    validTo: Date;
+    serialNumber: string;
+    subject: string;
+    organization: string;
+    organizationalUnit: string;
+    website: string;
+    responsiblePerson: string;
+    renewalDueDate: Date;
+    comments: string;
+    lastUpdated: Date;
+  }
+
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     issuer: '',
     validFrom: new Date(),
@@ -64,6 +82,8 @@ export const CertificateSearch: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ ...searchParams, [field]: event.target.value });
@@ -98,20 +118,34 @@ export const CertificateSearch: React.FC = () => {
   const handleNextRecord = () => {
     if (currentRecordIndex < searchResults.length - 1) {
       setCurrentRecordIndex(currentRecordIndex + 1);
-      setSelectedCertificate(searchResults[currentRecordIndex + 1]);
+      const nextCert = searchResults[currentRecordIndex + 1];
+      setSelectedCertificate(null); // Clear first
+      setTimeout(() => setSelectedCertificate(nextCert), 0); // Set on next tick
     }
   };
 
   const handlePreviousRecord = () => {
     if (currentRecordIndex > 0) {
       setCurrentRecordIndex(currentRecordIndex - 1);
-      setSelectedCertificate(searchResults[currentRecordIndex - 1]);
+      const prevCert = searchResults[currentRecordIndex - 1];
+      setSelectedCertificate(null); // Clear first
+      setTimeout(() => setSelectedCertificate(prevCert), 0); // Set on next tick
     }
   };
 
   // Update handleSearch to reset currentRecordIndex
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if at least one search field has a value
+    const hasSearchTerms = Object.values(searchParams).some(value => value.trim() !== '');
+    
+    if (!hasSearchTerms) {
+      setError('Please enter at least one search term');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setCurrentRecordIndex(0); // Reset index when performing new search
@@ -173,29 +207,47 @@ export const CertificateSearch: React.FC = () => {
   useEffect(() => {
     if (selectedCertificate) {
       try {
-        setFormData({
-          // Keep existing certificate details mapping
+        const newFormData: FormData = {
+          // Convert nullable fields to empty strings or default dates
           name: selectedCertificate.name || '',
           issuer: selectedCertificate.issuer || '',
-          validFrom: safeParseDate(selectedCertificate.validFrom),
-          validTo: safeParseDate(selectedCertificate.validTo),
+          validFrom: selectedCertificate.validFrom ? safeParseDate(selectedCertificate.validFrom) : new Date(),
+          validTo: selectedCertificate.validTo ? safeParseDate(selectedCertificate.validTo) : new Date(),
           serialNumber: selectedCertificate.serialNumber || '',
           subject: selectedCertificate.subject || '',
           organization: selectedCertificate.organization || '',
           organizationalUnit: selectedCertificate.organizationalUnit || '',
-          
-          // Fix the mapping for the certManager fields
           website: selectedCertificate.certManager?.website || '',
-          responsiblePerson: selectedCertificate.certManager?.responsiblePerson || '', // Changed from personResponsible to responsiblePerson
-          renewalDueDate: safeParseDate(selectedCertificate.certManager?.renewalDate),
+          responsiblePerson: selectedCertificate.certManager?.responsiblePerson || '',
+          renewalDueDate: selectedCertificate.certManager?.renewalDate ? 
+            safeParseDate(selectedCertificate.certManager.renewalDate) : 
+            new Date(),
           comments: selectedCertificate.certManager?.comments || '',
-          // Remove lastUpdated as it's not in the Certificate interface
-          lastUpdated: new Date(), // Use current date or remove if not needed
-        });
+          lastUpdated: new Date()
+        };
+        
+        setFormData(newFormData);
       } catch (error) {
         console.error('Error setting form data:', error);
         setError('Error loading certificate details');
       }
+    } else {
+      // Reset form with default values
+      setFormData({
+        name: '',
+        issuer: '',
+        validFrom: new Date(),
+        validTo: new Date(),
+        serialNumber: '',
+        subject: '',
+        organization: '',
+        organizationalUnit: '',
+        website: '',
+        responsiblePerson: '',
+        renewalDueDate: new Date(),
+        comments: '',
+        lastUpdated: new Date()
+      });
     }
   }, [selectedCertificate]);
 
@@ -206,39 +258,55 @@ export const CertificateSearch: React.FC = () => {
   };
 
   const renderCertificateFields = (certificate: Certificate) => {
-    // Update fields array to make sure we capture all possible fields
+    // Reset all fields explicitly
     const fields: CertificateField[] = [
-      { label: 'Name', value: certificate.name, type: 'text' },
-      { label: 'Issuer', value: certificate.issuer, type: 'text' },
-      { label: 'Valid From', value: certificate.validFrom, type: 'date' },
-      { label: 'Valid To', value: certificate.validTo, type: 'date' },
-      { label: 'Serial Number', value: certificate.serialNumber, type: 'text' },
-      { label: 'Subject', value: certificate.subject, type: 'text' },
-      { label: 'Organization', value: certificate.organization, type: 'text' },
-      { label: 'Organizational Unit', value: certificate.organizationalUnit, type: 'text' },
-      { label: 'Last Queried', value: certificate.certLastQueried, type: 'date' }
+      { label: 'Name', value: certificate.name || '', type: 'text' },
+      { label: 'Issuer', value: certificate.issuer || '', type: 'text' },
+      { label: 'Valid From', value: certificate.validFrom || null, type: 'date' },
+      { label: 'Valid To', value: certificate.validTo || null, type: 'date' },
+      { label: 'Serial Number', value: certificate.serialNumber || '', type: 'text' },
+      { label: 'Subject', value: certificate.subject || '', type: 'text' },
+      { label: 'Organization', value: certificate.organization || '', type: 'text' },
+      { label: 'Organizational Unit', value: certificate.organizationalUnit || '', type: 'text' },
+      { label: 'Last Queried', value: certificate.certLastQueried || null, type: 'date' }
     ];
 
     // Add metadata fields if they exist
     if (certificate.metadata) {
       fields.push(
-        { label: 'Country', value: certificate.metadata.country, type: 'text' },
-        { label: 'State', value: certificate.metadata.state, type: 'text' },
-        { label: 'Locality', value: certificate.metadata.locality, type: 'text' },
-        { label: 'Fingerprint', value: certificate.metadata.fingerprint, type: 'text' },
-        { label: 'Bits', value: certificate.metadata.bits, type: 'number' }
+        { label: 'Country', value: certificate.metadata.country || '', type: 'text' },
+        { label: 'State', value: certificate.metadata.state || '', type: 'text' },
+        { label: 'Locality', value: certificate.metadata.locality || '', type: 'text' },
+        { label: 'Fingerprint', value: certificate.metadata.fingerprint || '', type: 'text' },
+        { label: 'Bits', value: certificate.metadata.bits || null, type: 'number' }
       );
     }
 
     return (
-      <Box sx={{ width: '100%', p: 0.5 }}>
-        {fields.filter(field => field.value !== null && field.value !== '').map((field, index) => (
-          <Box key={index} sx={{ mb: 1.5 }}>
+      <Box 
+        key={`cert-fields-${certificate._id || certificate.id}`} 
+        sx={{ 
+          width: '100%',
+          p: 0.25,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 0.75  // Use gap instead of margin for more stable layout
+        }}
+      >
+        {fields.map((field, index) => (
+          <Box 
+            key={`${field.label}-${index}`}
+            sx={{ 
+              minHeight: field.type === 'date' ? '40px' : '32px',  // Fixed heights
+              width: '100%'
+            }}
+          >
             {field.type === 'date' ? (
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DateTimePicker
+                  key={`${field.label}-${certificate._id || certificate.id}`}
                   label={field.label}
-                  value={safeParseDate(field.value as string)}
+                  value={field.value ? safeParseDate(field.value as string) : null}
                   disabled
                   onChange={() => {}}
                   renderInput={(params: TextFieldProps) => (
@@ -249,15 +317,20 @@ export const CertificateSearch: React.FC = () => {
                       variant="outlined"
                       size="small"
                       sx={{ 
+                        height: '40px',  // Fixed height
                         backgroundColor: '#f5f5f5',
                         '& .MuiOutlinedInput-root': {
+                          height: '40px',
                           backgroundColor: '#f5f5f5'
                         },
                         '& .MuiInputLabel-root': {
-                          fontSize: '0.875rem'
+                          fontSize: '0.8rem',
+                          lineHeight: '1',
+                          transform: 'translate(14px, 12px) scale(1)'
                         },
                         '& .MuiOutlinedInput-input': {
-                          fontSize: '0.875rem'
+                          fontSize: '0.8rem',
+                          padding: '8px'
                         }
                       }}
                     />
@@ -269,23 +342,29 @@ export const CertificateSearch: React.FC = () => {
               </LocalizationProvider>
             ) : (
               <TextField
+                key={`${field.label}-${certificate._id || certificate.id}`}
                 fullWidth
                 label={field.label}
-                value={field.value}
+                value={field.value || ''}
                 disabled
                 type={field.type}
                 variant="outlined"
                 size="small"
                 sx={{ 
+                  height: '32px',  // Fixed height
                   backgroundColor: '#f5f5f5',
                   '& .MuiOutlinedInput-root': {
+                    height: '32px',
                     backgroundColor: '#f5f5f5'
                   },
                   '& .MuiInputLabel-root': {
-                    fontSize: '0.875rem'
+                    fontSize: '0.8rem',
+                    lineHeight: '1',
+                    transform: 'translate(14px, 8px) scale(1)'
                   },
                   '& .MuiOutlinedInput-input': {
-                    fontSize: '0.875rem'
+                    fontSize: '0.8rem',
+                    padding: '6px 8px'
                   }
                 }}
               />
@@ -293,9 +372,13 @@ export const CertificateSearch: React.FC = () => {
           </Box>
         ))}
         
+        {/* Alternative Names section */}
         {certificate.metadata?.alternativeNames && 
          certificate.metadata.alternativeNames.length > 0 && (
-          <Box sx={{ mt: 1, mb: 1.5 }}>
+          <Box 
+            key={`alt-names-${certificate._id || certificate.id}`}
+            sx={{ mt: 0.5, mb: 0.75 }}  // Reduced margins
+          >
             <TextField
               fullWidth
               label="Alternative Names"
@@ -303,7 +386,7 @@ export const CertificateSearch: React.FC = () => {
               disabled
               multiline
               size="small"
-              rows={Math.min(3, certificate.metadata.alternativeNames.length)}
+              rows={2}  // Reduced rows
               variant="outlined"
               sx={{ 
                 backgroundColor: '#f5f5f5',
@@ -311,10 +394,11 @@ export const CertificateSearch: React.FC = () => {
                   backgroundColor: '#f5f5f5'
                 },
                 '& .MuiInputLabel-root': {
-                  fontSize: '0.875rem'
+                  fontSize: '0.8rem'  // Smaller font for label
                 },
                 '& .MuiOutlinedInput-input': {
-                  fontSize: '0.875rem'
+                  fontSize: '0.8rem',  // Smaller font for input
+                  py: 0.75  // Reduced vertical padding
                 }
               }}
             />
@@ -367,24 +451,84 @@ export const CertificateSearch: React.FC = () => {
     setRenewDialogOpen(true);
   };
 
+  const handleCloseRenewDialog = () => {
+    setRenewDialogOpen(false);
+  };
+
   const handlePullCertData = async () => {
     // TODO: Implement pull certificate data
     console.log('Pulling certificate data:', selectedCertificate?.id);
   };
 
-  const handleDeleteCertificate = async () => {
-    // TODO: Implement certificate deletion
-    console.log('Deleting certificate:', selectedCertificate?.id);
+  const handleDeleteCertificate = () => {
+    console.log('Opening delete dialog for certificate:', {
+      id: selectedCertificate?.id,
+      name: selectedCertificate?.name
+    });
+    setDeleteDialogOpen(true);
   };
 
-  const handleCloseRenewDialog = () => {
-    setRenewDialogOpen(false);
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    console.log('Selected certificate:', selectedCertificate); // Debug log
+
+    // Check for both _id and id
+    const certificateId = selectedCertificate?._id || selectedCertificate?.id;
+
+    if (!certificateId) {
+      console.error('No certificate ID found:', {
+        _id: selectedCertificate?._id,
+        id: selectedCertificate?.id,
+        certificate: selectedCertificate
+      });
+      setError('No certificate ID found for deletion');
+      setDeleteDialogOpen(false);
+      return;
+    }
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      console.log('Initiating delete for certificate:', {
+        id: certificateId,
+        name: selectedCertificate.name
+      });
+      
+      await deleteCertificate(certificateId);
+      
+      // Remove the deleted certificate from the search results
+      setSearchResults(prevResults => 
+        prevResults.filter(cert => (cert._id || cert.id) !== certificateId)
+      );
+      
+      // Reset UI state
+      setDeleteDialogOpen(false);
+      setShowForm(false);
+      setSelectedCertificate(null);
+      
+      // Show success message
+      setError('Certificate successfully deleted');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete certificate');
+      setDeleteDialogOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
-    <Box sx={{ ml: -25, mt: 2 }}>  {/* Reduced top margin */}
-      <Paper sx={{ p: 3, mb: 2, mr: 8 }}>  {/* Increased right margin from 4 to 8 */}
-        <Typography variant="h4" gutterBottom>
+    <Box sx={{ ml: -25, mt: 0 }}>  {/* Reduced top margin from 2 to 0 */}
+      <Paper sx={{ 
+        p: 2,  // Reduced padding from 3 to 2
+        mb: 1,  // Reduced bottom margin from 2 to 1
+        mr: 8 
+      }}>
+        <Typography variant="h4" sx={{ mb: 1 }}>  {/* Added margin bottom */}
           Find Certificate
         </Typography>
         <form onSubmit={handleSearch}>
@@ -438,13 +582,13 @@ export const CertificateSearch: React.FC = () => {
       </Paper>
 
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>  {/* Reduced margin */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 1 }}>  {/* Reduced margin */}
           <CircularProgress />
         </Box>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>  {/* Reduced margin */}
+        <Alert severity="error" sx={{ mb: 1 }}>  {/* Reduced margin */}
           {error}
         </Alert>
       )}
@@ -475,13 +619,13 @@ export const CertificateSearch: React.FC = () => {
           {/* Add Record Navigation */}
           {searchResults.length > 1 && (
             <Paper sx={{ 
-              p: 1,  // Reduced padding
-              mb: 2, 
-              mr: 8,  // Increased right margin from 4 to 8
+              p: 0.5,  // Reduced padding from 1 to 0.5
+              mb: 1,   // Reduced margin from 2 to 1
+              mr: 8,
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              height: '48px'  // Fixed height for consistency
+              height: '40px'  // Reduced height from 48px to 40px
             }}>
               <IconButton 
                 onClick={handlePreviousRecord}
@@ -501,159 +645,194 @@ export const CertificateSearch: React.FC = () => {
             </Paper>
           )}
 
-          <Grid container spacing={2}>  {/* Reduced grid spacing */}
+          <Grid container spacing={1}>
             <Grid item xs={12} md={6}>
               <Paper sx={{ 
-                p: 2,  // Reduced padding
-                height: 'calc(100vh - 280px)',  // Adjusted height to prevent scrolling
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                height: '600px',
+                position: 'relative',
+                backgroundColor: 'white'
               }}>
-                <Typography 
-                  variant="h5"
-                  gutterBottom 
-                  sx={{ 
-                    mb: 2,
-                    fontSize: '1.2rem'
-                  }}
-                >
-                  Certificate Management
-                </Typography>
-                <form onSubmit={handleSubmit}>
-                  <Grid container spacing={2}>  {/* Reduced spacing */}
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        required
-                        label="Website"
-                        value={formData.website}
-                        onChange={handleChange('website')}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Person Responsible"
-                        value={formData.responsiblePerson}
-                        onChange={handleChange('responsiblePerson')}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker
-                          label="Alert Notification Date"
-                          value={formData.renewalDueDate}
-                          onChange={handleDateChange('renewalDueDate')}
-                          renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth />}
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  p: 1.5,
+                  backgroundColor: 'white',
+                  zIndex: 1,
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
+                }}>
+                  <Typography 
+                    variant="h5"
+                    sx={{ 
+                      fontSize: '1.1rem',
+                      fontWeight: 500
+                    }}
+                  >
+                    Certificate Management
+                  </Typography>
+                </Box>
+
+                <Box sx={{
+                  position: 'absolute',
+                  top: 48,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  overflowY: 'auto',
+                  p: 1.5,
+                  pt: 1
+                }}>
+                  <form onSubmit={handleSubmit}>
+                    <Grid container spacing={2}>  {/* Increased spacing */}
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          required
+                          label="Website"
+                          value={formData.website}
+                          onChange={handleChange('website')}
+                          size="small"  // Made input field smaller
                         />
-                      </LocalizationProvider>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Comments"
-                        value={formData.comments}
-                        onChange={handleChange('comments')}
-                        multiline
-                        rows={4}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2, 
-                          border: '1px solid rgba(0, 0, 0, 0.12)',
-                          borderRadius: 1
-                        }}
-                      >
-                        <Typography 
-                          variant="subtitle2" 
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Person Responsible"
+                          value={formData.responsiblePerson}
+                          onChange={handleChange('responsiblePerson')}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                          <DatePicker
+                            label="Alert Notification Date"
+                            value={formData.renewalDueDate}
+                            onChange={handleDateChange('renewalDueDate')}
+                            renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth />}
+                          />
+                        </LocalizationProvider>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Comments"
+                          value={formData.comments}
+                          onChange={handleChange('comments')}
+                          multiline
+                          rows={4}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Paper 
+                          elevation={0} 
                           sx={{ 
-                            mb: 2,
-                            color: 'text.secondary',
-                            fontWeight: 500
+                            p: 2, 
+                            border: '1px solid rgba(0, 0, 0, 0.12)',
+                            borderRadius: 1
                           }}
                         >
-                          Options
-                        </Typography>
-                        <Box sx={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '1fr 1fr', 
-                          gap: 1,
-                          '& .MuiButton-root': {
-                            height: '48px'
-                          }
-                        }}>
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              mb: 2,
+                              color: 'text.secondary',
+                              fontWeight: 500
+                            }}
                           >
-                            Save Changes
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            onClick={handlePullCertData}
-                          >
-                            Pull Cert Data
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            onClick={handleRenewCertificate}
-                          >
-                            Renew Certificate
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            fullWidth
-                            onClick={handleDeleteCertificate}
-                          >
-                            Delete
-                          </Button>
-                        </Box>
-                      </Paper>
+                            Options
+                          </Typography>
+                          <Box sx={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: '1fr 1fr', 
+                            gap: 1,
+                            '& .MuiButton-root': {
+                              height: '48px'
+                            }
+                          }}>
+                            <Button
+                              type="submit"
+                              variant="contained"
+                              color="primary"
+                              fullWidth
+                            >
+                              Save Changes
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              fullWidth
+                              onClick={handlePullCertData}
+                            >
+                              Pull Cert Data
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              fullWidth
+                              onClick={handleRenewCertificate}
+                            >
+                              Renew Certificate
+                            </Button>
+                            <Button
+                              variant="contained"
+                              color="error"
+                              fullWidth
+                              onClick={handleDeleteCertificate}
+                            >
+                              Delete
+                            </Button>
+                          </Box>
+                        </Paper>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                </form>
+                  </form>
+                </Box>
               </Paper>
             </Grid>
 
             <Grid item xs={12} md={6}>
               <Paper sx={{ 
-                p: 2,
-                mr: 8,  // Increased right margin from 4 to 8
-                height: 'calc(100vh - 280px)',  // Match height with management section
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: 'white'
+                height: '600px',
+                position: 'relative',
+                backgroundColor: 'white',
+                mr: 8
               }}>
-                <Typography 
-                  variant="h5"
-                  gutterBottom 
-                  sx={{ 
-                    mb: 2,
-                    fontSize: '1.2rem'
-                  }}
-                >
-                  Certificate Details
-                </Typography>
-                <Box 
-                  sx={{
-                    overflowY: 'auto',
-                    flex: 1,
-                    '& .MuiTextField-root': {
-                      display: 'block',
-                      width: '100%'
-                    }
-                  }}
-                >
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  p: 1.5,
+                  backgroundColor: 'white',
+                  zIndex: 1,
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
+                }}>
+                  <Typography 
+                    variant="h5"
+                    sx={{ 
+                      fontSize: '1.1rem',
+                      fontWeight: 500
+                    }}
+                  >
+                    Certificate Details
+                  </Typography>
+                </Box>
+
+                <Box sx={{
+                  position: 'absolute',
+                  top: 48,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  overflowY: 'auto',
+                  p: 1.5,
+                  pt: 1
+                }}>
                   {selectedCertificate && renderCertificateFields(selectedCertificate)}
                 </Box>
               </Paper>
@@ -669,6 +848,39 @@ export const CertificateSearch: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseRenewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleCloseDeleteDialog}
+      >
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this certificate record?
+            {selectedCertificate?.name && (
+              <Box component="span" sx={{ fontWeight: 'bold', display: 'block', mt: 1 }}>
+                {selectedCertificate.name}
+              </Box>
+            )}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCloseDeleteDialog}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete}
+            color="error"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
