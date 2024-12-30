@@ -6,6 +6,11 @@ import {
   Typography,
   Paper,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -31,6 +36,18 @@ export const CreateCertificate: React.FC = () => {
     organizationalUnit: '',
   });
 
+  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState('');
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+  };
+
+  const showComingSoonDialog = (feature: string) => {
+    setDialogMessage(`${feature} feature coming soon!`);
+    setOpenDialog(true);
+  };
+
   const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [field]: event.target.value });
   };
@@ -45,6 +62,15 @@ export const CreateCertificate: React.FC = () => {
     e.preventDefault();
     // TODO: Implement certificate creation
     console.log(formData);
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      ...formData,
+      website: '',
+      responsiblePerson: '',
+      comments: ''
+    });
   };
 
   return (
@@ -144,23 +170,23 @@ export const CreateCertificate: React.FC = () => {
                         variant="contained"
                         color="primary"
                         fullWidth
-                        onClick={() => console.log('Pull cert data')}
-                      >
-                        Pull Cert Data
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        onClick={() => console.log('Create certificate')}
+                        onClick={() => showComingSoonDialog('Create Certificate')}
                       >
                         Create Certificate
                       </Button>
                       <Button
                         variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={() => showComingSoonDialog('Pull Certificate Data')}
+                      >
+                        Pull Cert Data
+                      </Button>
+                      <Button
+                        variant="contained"
                         color="error"
                         fullWidth
-                        onClick={() => console.log('Cancel')}
+                        onClick={handleCancel}
                       >
                         Cancel
                       </Button>
@@ -214,6 +240,27 @@ export const CreateCertificate: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={openDialog}
+        onClose={handleDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Coming Soon"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {dialogMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose} autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
