@@ -76,32 +76,18 @@ export const QueryWebsite: React.FC = () => {
           
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <Button
-              variant="outlined"
-              sx={{
-                borderColor: 'primary.main',
-                color: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.light',
-                  borderColor: 'primary.main',
-                  opacity: 0.8,
-                },
-              }}
               type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
               disabled={!url || loading}
             >
               {loading ? <CircularProgress size={24} /> : 'Submit'}
             </Button>
             <Button
-              variant="outlined"
-              sx={{
-                borderColor: 'primary.main',
-                color: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.light',
-                  borderColor: 'primary.main',
-                  opacity: 0.8,
-                },
-              }}
+              variant="contained"
+              color="primary"
+              size="large"
               onClick={handleCancel}
               disabled={loading}
             >

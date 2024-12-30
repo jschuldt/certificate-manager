@@ -13,11 +13,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
 
-export const CertificateInventory: React.FC = () => {
+export const CertificateSearch: React.FC = () => {  // Changed from CertificateInventory to CertificateSearch
   const [searchParams, setSearchParams] = useState({
     name: '',
-    issuer: '',
+    website: '', // Changed from issuer to website
     organization: '',
+    responsiblePerson: '',
   });
 
   const [showForm, setShowForm] = useState(false);
@@ -67,15 +68,15 @@ export const CertificateInventory: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4 }}>
+    <Box sx={{ ml: -25, mt: 4 }}> {/* Increased negative margin from -20 to -25 */}
       {/* Search Form */}
-      <Paper sx={{ p: 4, mb: 4 }}>
+      <Paper sx={{ p: 4, mb: 4, mr: 4 }}> {/* Added mr: 4 to match Certificate Details section */}
         <Typography variant="h4" gutterBottom>
           Search Certificate
         </Typography>
         <form onSubmit={handleSearch}>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 label="Certificate Name"
@@ -83,15 +84,23 @@ export const CertificateInventory: React.FC = () => {
                 onChange={handleSearchChange('name')}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
-                label="Issuer"
-                value={searchParams.issuer}
-                onChange={handleSearchChange('issuer')}
+                label="Website"
+                value={searchParams.website}
+                onChange={handleSearchChange('website')}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                fullWidth
+                label="Responsible Party"
+                value={searchParams.responsiblePerson}
+                onChange={handleSearchChange('responsiblePerson')}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
               <TextField
                 fullWidth
                 label="Organization"
@@ -189,7 +198,7 @@ export const CertificateInventory: React.FC = () => {
 
           {/* Right Side - Certificate Details */}
           <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 4, height: '100%' }}>
+            <Paper sx={{ p: 4, height: '100%', mr: 4 }}> {/* Added mr: 4 to pull right panel in */}
               <Typography variant="h4" gutterBottom>
                 Certificate Details
               </Typography>

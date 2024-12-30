@@ -17,7 +17,7 @@ export const Sidebar = () => {
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Query Website', icon: <SearchIcon />, path: '/query' },
-    { text: 'Certificate Inventory', icon: <InventoryIcon />, path: '/inventory' },
+    { text: 'Certificate Search', icon: <InventoryIcon />, path: '/inventory' }, // Updated text
     { text: 'About', icon: <InfoIcon />, path: '/about' },
   ];
 

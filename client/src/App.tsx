@@ -4,7 +4,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { Home } from './features/home/components/Home';
 import { QueryWebsite } from './features/query/components/QueryWebsite';
 import { About } from './features/about/components/About';
-import { CertificateInventory } from './features/inventory/components/CertificateInventory';
+import { CertificateSearch } from './features/inventory/components/CertificateSearch';
 
 const App: React.FC = () => {
   return (
@@ -13,7 +13,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/query" element={<QueryWebsite />} />
-          <Route path="/inventory" element={<CertificateInventory />} />
+          <Route path="/inventory" element={<CertificateSearch />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </MainLayout>
