@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
-import { QueryWebsite } from '../features/query/components/QueryWebsite';
+import { QueryWebsite } from '../features/pullCert/components/PullCert';
 
 export const AppRoutes = () => {
   return (

@@ -9,6 +9,10 @@ import {
   CircularProgress,
   Alert,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -59,6 +63,7 @@ export const CertificateSearch: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+  const [renewDialogOpen, setRenewDialogOpen] = useState(false);
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ ...searchParams, [field]: event.target.value });
@@ -324,7 +329,7 @@ export const CertificateSearch: React.FC = () => {
       <Paper 
         sx={{ 
           p: 2,
-          mr: 4,
+          mr: 8,
           overflow: 'auto',
           maxHeight: 'calc(100vh - 200px)',
           display: 'flex',
@@ -358,11 +363,29 @@ export const CertificateSearch: React.FC = () => {
     </Grid>
   );
 
+  const handleRenewCertificate = async () => {
+    setRenewDialogOpen(true);
+  };
+
+  const handlePullCertData = async () => {
+    // TODO: Implement pull certificate data
+    console.log('Pulling certificate data:', selectedCertificate?.id);
+  };
+
+  const handleDeleteCertificate = async () => {
+    // TODO: Implement certificate deletion
+    console.log('Deleting certificate:', selectedCertificate?.id);
+  };
+
+  const handleCloseRenewDialog = () => {
+    setRenewDialogOpen(false);
+  };
+
   return (
     <Box sx={{ ml: -25, mt: 2 }}>  {/* Reduced top margin */}
-      <Paper sx={{ p: 3, mb: 2, mr: 4 }}>  {/* Reduced padding and margin bottom */}
+      <Paper sx={{ p: 3, mb: 2, mr: 8 }}>  {/* Increased right margin from 4 to 8 */}
         <Typography variant="h4" gutterBottom>
-          Search Certificate
+          Find Certificate
         </Typography>
         <form onSubmit={handleSearch}>
           <Grid container spacing={3}>
@@ -399,14 +422,16 @@ export const CertificateSearch: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-              >
-                Search
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                >
+                  Search
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </form>
@@ -425,7 +450,7 @@ export const CertificateSearch: React.FC = () => {
       )}
 
       {searchResults.length > 0 && !showForm && (
-        <Paper sx={{ p: 4, mb: 4, mr: 4 }}>
+        <Paper sx={{ p: 4, mb: 4, mr: 8 }}>  {/* Increased right margin from 4 to 8 */}
           <Typography variant="h6" gutterBottom>
             Search Results
           </Typography>
@@ -452,7 +477,7 @@ export const CertificateSearch: React.FC = () => {
             <Paper sx={{ 
               p: 1,  // Reduced padding
               mb: 2, 
-              mr: 4, 
+              mr: 8,  // Increased right margin from 4 to 8
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
@@ -499,6 +524,7 @@ export const CertificateSearch: React.FC = () => {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
+                        required
                         label="Website"
                         value={formData.website}
                         onChange={handleChange('website')}
@@ -515,7 +541,7 @@ export const CertificateSearch: React.FC = () => {
                     <Grid item xs={12}>
                       <LocalizationProvider dateAdapter={AdapterDateFns}>
                         <DatePicker
-                          label="Renewal Due Date"
+                          label="Alert Notification Date"
                           value={formData.renewalDueDate}
                           onChange={handleDateChange('renewalDueDate')}
                           renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth />}
@@ -533,15 +559,66 @@ export const CertificateSearch: React.FC = () => {
                       />
                     </Grid>
                     <Grid item xs={12}>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        fullWidth
+                      <Paper 
+                        elevation={0} 
+                        sx={{ 
+                          p: 2, 
+                          border: '1px solid rgba(0, 0, 0, 0.12)',
+                          borderRadius: 1
+                        }}
                       >
-                        Save Metadata
-                      </Button>
+                        <Typography 
+                          variant="subtitle2" 
+                          sx={{ 
+                            mb: 2,
+                            color: 'text.secondary',
+                            fontWeight: 500
+                          }}
+                        >
+                          Options
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '1fr 1fr', 
+                          gap: 1,
+                          '& .MuiButton-root': {
+                            height: '48px'
+                          }
+                        }}>
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                          >
+                            Save Changes
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={handlePullCertData}
+                          >
+                            Pull Cert Data
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={handleRenewCertificate}
+                          >
+                            Renew Certificate
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            fullWidth
+                            onClick={handleDeleteCertificate}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
+                      </Paper>
                     </Grid>
                   </Grid>
                 </form>
@@ -551,7 +628,7 @@ export const CertificateSearch: React.FC = () => {
             <Grid item xs={12} md={6}>
               <Paper sx={{ 
                 p: 2,
-                mr: 4,
+                mr: 8,  // Increased right margin from 4 to 8
                 height: 'calc(100vh - 280px)',  // Match height with management section
                 display: 'flex',
                 flexDirection: 'column',
@@ -584,6 +661,16 @@ export const CertificateSearch: React.FC = () => {
           </Grid>
         </>
       )}
+
+      <Dialog open={renewDialogOpen} onClose={handleCloseRenewDialog}>
+        <DialogTitle>Certificate Renewal</DialogTitle>
+        <DialogContent>
+          <Typography>Coming Soon!</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRenewDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

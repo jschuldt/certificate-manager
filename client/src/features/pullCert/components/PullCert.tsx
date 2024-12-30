@@ -56,12 +56,11 @@ export const QueryWebsite: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Query Website Certificate
-      </Typography>
-      
-      <Paper sx={{ p: 3, mb: 4 }}>
+    <Box sx={{ ml: -25, mt: 2 }}>
+      <Paper sx={{ p: 3, mb: 4, mr: 8 }}>  {/* Increased right margin from 4 to 8 */}
+        <Typography variant="h4" gutterBottom>
+          Query Website Certificate
+        </Typography>
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
@@ -123,7 +122,7 @@ export const QueryWebsite: React.FC = () => {
       )}
 
       {result && (
-        <Paper sx={{ p: 3 }}>
+        <Paper sx={{ p: 3, mr: 8 }}>  {/* Increased right margin from 4 to 8 */}
           <Typography variant="h6" gutterBottom>
             Certificate Information
           </Typography>

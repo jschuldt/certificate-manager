@@ -8,6 +8,8 @@ import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useNavigate } from 'react-router-dom';
 import { StyledDrawer, StyledListItemButton } from '../../styles/Sidebar.styles';
 
@@ -16,8 +18,11 @@ export const Sidebar = () => {
 
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Query Website', icon: <SearchIcon />, path: '/query' },
-    { text: 'Certificate Search', icon: <InventoryIcon />, path: '/inventory' }, // Updated text
+    { text: 'Create Cert', icon: <AddCircleOutlineIcon />, path: '/create' },
+    { text: 'Maintain Cert', icon: <InventoryIcon />, path: '/inventory' },
+    { text: 'Pull Cert', icon: <SearchIcon />, path: '/query' },
+    { text: 'Query Cert', icon: <SearchIcon />, path: '/search' },
+    { text: 'Admin', icon: <AdminPanelSettingsIcon />, path: '/admin' },
     { text: 'About', icon: <InfoIcon />, path: '/about' },
   ];
 

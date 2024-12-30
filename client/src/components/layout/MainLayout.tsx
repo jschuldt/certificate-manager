@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, styled } from '@mui/material';
 import { Sidebar } from '../navigation/Sidebar';
+import { UserMenu } from '../navigation/UserMenu';
 
 const StyledLayout = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
@@ -23,6 +24,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <StyledLayout>
       <Sidebar />
+      <UserMenu />
       <MainContent>
         {children}
       </MainContent>
