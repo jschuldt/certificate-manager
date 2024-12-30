@@ -80,13 +80,14 @@ const columns: Column[] = [
   }
 ];
 
+// Update the searchFields array to be sorted alphabetically
 const searchFields = [
   { value: 'name', label: 'Certificate Name' },
-  { value: 'website', label: 'Website' },
-  { value: 'responsiblePerson', label: 'Responsible Party' },
-  { value: 'organization', label: 'Organization' },
   { value: 'issuer', label: 'Issuer' },
-];
+  { value: 'organization', label: 'Organization' },
+  { value: 'responsiblePerson', label: 'Responsible Party' },
+  { value: 'website', label: 'Website' }
+].sort((a, b) => a.label.localeCompare(b.label));
 
 export const QueryCert: React.FC = () => {
   const [searchField, setSearchField] = useState('name');
