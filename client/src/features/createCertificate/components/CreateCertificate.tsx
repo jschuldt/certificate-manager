@@ -102,15 +102,6 @@ export const CreateCertificate: React.FC = () => {
     }
   };
 
-  const handleCancel = () => {
-    setFormData({
-      ...formData,
-      website: '',
-      responsiblePerson: '',
-      comments: ''
-    });
-  };
-
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
@@ -141,6 +132,11 @@ export const CreateCertificate: React.FC = () => {
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
+  };
+
+  const handleNewRecord = () => {
+    // Reload the page to reset everything
+    window.location.reload();
   };
 
   return (
@@ -233,43 +229,46 @@ export const CreateCertificate: React.FC = () => {
                         variant="contained"
                         color="primary"
                         fullWidth
-                        disabled={!formData.website} // Disable if required field is empty
+                        disabled={!formData.website}
+                        sx={{ gridColumn: 'span 2' }}
                       >
                         {certificateId ? 'Update' : 'Save'}
                       </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        onClick={() => showComingSoonDialog('Create Certificate')}
-                      >
-                        Create Certificate
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        onClick={() => showComingSoonDialog('Pull Certificate Data')}
-                      >
-                        Pull Cert Data
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        fullWidth
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
                       {certificateId && (
-                        <Button
-                          variant="contained"
-                          color="error"
-                          fullWidth
-                          onClick={handleDeleteClick}
-                        >
-                          Delete
-                        </Button>
+                        <>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={() => showComingSoonDialog('Create Certificate')}
+                          >
+                            Create Certificate
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={() => showComingSoonDialog('Pull Certificate Data')}
+                          >
+                            Pull Cert Data
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="success"
+                            fullWidth
+                            onClick={handleNewRecord}
+                          >
+                            New Record
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            fullWidth
+                            onClick={handleDeleteClick}
+                          >
+                            Delete
+                          </Button>
+                        </>
                       )}
                     </Box>
                   </Paper>
