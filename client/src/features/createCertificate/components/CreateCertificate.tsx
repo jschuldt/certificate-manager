@@ -35,6 +35,15 @@ export const CreateCertificate: React.FC = () => {
     subject: '',
     organization: '',
     organizationalUnit: '',
+    certLastQueried: null,
+    metadata: {
+      country: '',
+      state: '',
+      locality: '',
+      alternativeNames: [],
+      fingerprint: '',
+      bits: null
+    }
   });
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -299,23 +308,137 @@ export const CreateCertificate: React.FC = () => {
                 mb: 2
               }
             }}>
-              {Object.entries(certificateDetails)
-                .map(([key, value]) => (
-                  <TextField
-                    key={key}
-                    fullWidth
-                    label={key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                    value={value instanceof Date ? '' : value}
-                    disabled
-                    size="small"
-                    sx={{ 
-                      backgroundColor: '#f5f5f5',
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: '#f5f5f5'
-                      }
-                    }}
-                  />
-              ))}
+              {/* Certificate Core Details */}
+              <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Core Details</Typography>
+              <TextField
+                fullWidth
+                label="Name"
+                value={certificateDetails.name}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Issuer"
+                value={certificateDetails.issuer}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Valid From"
+                value={certificateDetails.validFrom instanceof Date ? certificateDetails.validFrom.toLocaleDateString() : ''}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Valid To"
+                value={certificateDetails.validTo instanceof Date ? certificateDetails.validTo.toLocaleDateString() : ''}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+
+              {/* Certificate Details */}
+              <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Certificate Details</Typography>
+              <TextField
+                fullWidth
+                label="Serial Number"
+                value={certificateDetails.serialNumber}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Subject"
+                value={certificateDetails.subject}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Organization"
+                value={certificateDetails.organization}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Organizational Unit"
+                value={certificateDetails.organizationalUnit}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+
+              {/* Metadata */}
+              <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Additional Information</Typography>
+              <TextField
+                fullWidth
+                label="Country"
+                value={certificateDetails.metadata.country}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="State"
+                value={certificateDetails.metadata.state}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Locality"
+                value={certificateDetails.metadata.locality}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Alternative Names"
+                value={certificateDetails.metadata.alternativeNames.join(', ')}
+                disabled
+                size="small"
+                multiline
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Fingerprint"
+                value={certificateDetails.metadata.fingerprint}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              <TextField
+                fullWidth
+                label="Bits"
+                value={certificateDetails.metadata.bits || ''}
+                disabled
+                size="small"
+                sx={{ backgroundColor: '#f5f5f5' }}
+              />
+              {certificateDetails.certLastQueried && (
+                <TextField
+                  fullWidth
+                  label="Last Queried"
+                  value={new Date(certificateDetails.certLastQueried).toLocaleString()}
+                  disabled
+                  size="small"
+                  sx={{ backgroundColor: '#f5f5f5' }}
+                />
+              )}
             </Box>
           </Paper>
         </Grid>
