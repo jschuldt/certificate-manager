@@ -724,7 +724,7 @@ export const CertificateSearch: React.FC = () => {
                   p: 1.5,
                   pt: 1
                 }}>
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} style={{ marginTop: '16px' }}>  {/* Added top margin */}
                     <Grid container spacing={2}>  {/* Increased spacing */}
                       <Grid item xs={12}>
                         <TextField
