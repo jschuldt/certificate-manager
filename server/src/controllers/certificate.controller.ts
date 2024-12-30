@@ -5,9 +5,9 @@ import { validateCertificateInput, isValidMongoId } from '../utils/validation.ut
 export const certificateController = {
   async create(req: Request, res: Response) {
     try {
-      const errors = validateCertificateInput(req.body);
-      if (errors.length > 0) {
-        return res.status(400).json({ errors });
+      const validationErrors = validateCertificateInput(req.body);
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ errors: validationErrors });
       }
       const certificate = await certificateService.createCertificate(req.body);
       res.status(201).json(certificate);
@@ -40,6 +40,10 @@ export const certificateController = {
 
   async update(req: Request, res: Response) {
     try {
+      const validationErrors = validateCertificateInput(req.body);
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ errors: validationErrors });
+      }
       const certificate = await certificateService.updateCertificate(req.params.id, req.body);
       if (!certificate) return res.status(404).json({ error: 'Certificate not found' });
       res.json(certificate);

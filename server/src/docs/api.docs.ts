@@ -62,7 +62,7 @@ export const apiDocs = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['name', 'issuer', 'validFrom', 'validTo'],
+              required: ['certManager'],
               properties: {
                 name: { type: 'string' },
                 issuer: { type: 'string' },
@@ -71,7 +71,22 @@ export const apiDocs = {
                 serialNumber: { type: 'string' },
                 subject: { type: 'string' },
                 organization: { type: 'string' },
-                organizationalUnit: { type: 'string' }
+                organizationalUnit: { type: 'string' },
+                metadataWebsite: { type: 'string' },
+                metadataResponsiblePerson: { type: 'string' },
+                metadataRenewalDate: { type: 'string', format: 'date-time' },
+                metadataComments: { type: 'string' },
+                certLastQueried: { type: 'string', format: 'date-time' },
+                certManager: {
+                  type: 'object',
+                  required: ['website'],
+                  properties: {
+                    website: { type: 'string' },
+                    responsiblePerson: { type: 'string' },
+                    renewalDate: { type: 'string', format: 'date-time' },
+                    comments: { type: 'string' }
+                  }
+                }
               }
             }
           }
@@ -129,7 +144,21 @@ export const apiDocs = {
                 serialNumber: { type: 'string' },
                 subject: { type: 'string' },
                 organization: { type: 'string' },
-                organizationalUnit: { type: 'string' }
+                organizationalUnit: { type: 'string' },
+                metadataWebsite: { type: 'string' },
+                metadataResponsiblePerson: { type: 'string' },
+                metadataRenewalDate: { type: 'string', format: 'date-time' },
+                metadataComments: { type: 'string' },
+                certLastQueried: { type: 'string', format: 'date-time' },
+                certManager: {
+                  type: 'object',
+                  properties: {
+                    website: { type: 'string' },
+                    responsiblePerson: { type: 'string' },
+                    renewalDate: { type: 'string', format: 'date-time' },
+                    comments: { type: 'string' }
+                  }
+                }
               }
             }
           }
@@ -171,6 +200,10 @@ export const apiDocs = {
       }, {
         in: 'query',
         name: 'organization',
+        schema: { type: 'string' }
+      }, {
+        in: 'query',
+        name: 'website',  // Changed from certManager.website to website
         schema: { type: 'string' }
       }],
       responses: {

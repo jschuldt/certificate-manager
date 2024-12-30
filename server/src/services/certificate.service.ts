@@ -30,14 +30,25 @@ export class CertificateService {
     return await Certificate.findByIdAndDelete(id);
   }
 
-  async searchCertificates(query: Partial<ICertificate>): Promise<ICertificateDocument[]> {
-    return await Certificate.find({
-      $or: [
-        { name: new RegExp(String(query.name), 'i') },
-        { issuer: new RegExp(String(query.issuer), 'i') },
-        { organization: new RegExp(String(query.organization), 'i') }
-      ]
-    });
+  async searchCertificates(query: Partial<ICertificate> & { website?: string }): Promise<ICertificateDocument[]> {
+    const searchCriteria = [];
+    
+    if (query.name) {
+      searchCriteria.push({ name: new RegExp(String(query.name), 'i') });
+    }
+    if (query.issuer) {
+      searchCriteria.push({ issuer: new RegExp(String(query.issuer), 'i') });
+    }
+    if (query.organization) {
+      searchCriteria.push({ organization: new RegExp(String(query.organization), 'i') });
+    }
+    if (query.website) {
+      searchCriteria.push({ 'certManager.website': new RegExp(String(query.website), 'i') });
+    }
+
+    return await Certificate.find(
+      searchCriteria.length > 0 ? { $or: searchCriteria } : {}
+    );
   }
 
   async getExpiringCertificates(daysThreshold: number): Promise<ICertificateDocument[]> {

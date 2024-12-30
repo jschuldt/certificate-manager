@@ -5,14 +5,15 @@ export interface ICertificateDocument extends ICertificate, Document {}
 
 const certificateSchema = new Schema(
   {
-    name: { type: String, required: true },
-    issuer: { type: String, required: true },
-    validFrom: { type: Date, required: true },
-    validTo: { type: Date, required: true },
+    name: { type: String },
+    issuer: { type: String},
+    validFrom: { type: Date},
+    validTo: { type: Date,},
     serialNumber: { type: String },
     subject: { type: String },
     organization: { type: String },
     organizationalUnit: { type: String },
+    certLastQueried: { type: Date },
     metadata: {
       country: { type: String },
       state: { type: String },
@@ -20,6 +21,12 @@ const certificateSchema = new Schema(
       alternativeNames: [{ type: String }],
       fingerprint: { type: String },
       bits: { type: Number }
+    },
+    certManager: {
+      website: { type: String, required: true }, // Only this field remains required
+      responsiblePerson: { type: String },
+      renewalDate: { type: Date },
+      comments: { type: String }
     }
   },
   {

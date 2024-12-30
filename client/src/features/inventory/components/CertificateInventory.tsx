@@ -6,11 +6,12 @@ import {
   Typography,
   Paper,
   Grid,
-  Collapse,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { TextFieldProps } from '@mui/material';
 
 export const CertificateInventory: React.FC = () => {
   const [searchParams, setSearchParams] = useState({
@@ -30,6 +31,12 @@ export const CertificateInventory: React.FC = () => {
     subject: '',
     organization: '',
     organizationalUnit: '',
+    // Add new metadata fields
+    website: '',
+    responsiblePerson: '',
+    renewalDueDate: new Date(),
+    comments: '',
+    lastUpdated: new Date(), // Add this new field
   });
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +67,7 @@ export const CertificateInventory: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4 }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4 }}>
       {/* Search Form */}
       <Paper sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" gutterBottom>
@@ -106,98 +113,175 @@ export const CertificateInventory: React.FC = () => {
         </form>
       </Paper>
 
-      {/* Certificate Maintenance Form */}
-      <Collapse in={showForm}>
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            Certificate Details
-          </Typography>
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Certificate Name"
-                  value={formData.name}
-                  onChange={handleChange('name')}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Issuer"
-                  value={formData.issuer}
-                  onChange={handleChange('issuer')}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
-                    label="Valid From"
-                    value={formData.validFrom}
-                    onChange={handleDateChange('validFrom')}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
+      {/* Split Screen Layout */}
+      {showForm && (
+        <Grid container spacing={3}>
+          {/* Left Side - Certificate Management */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 4, height: '100%' }}>
+              <Typography variant="h4" gutterBottom>
+                Certificate Management
+              </Typography>
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={3}>
+                  {/* Certificate Metadata Section */}
+                  <Grid item xs={12}>
+                    <Typography variant="h5" gutterBottom>
+                      Certificate Metadata
+                    </Typography>
+                  </Grid>
+                  {/* Website field */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Website"
+                      value={formData.website}
+                      onChange={handleChange('website')}
+                    />
+                  </Grid>
+                  {/* Person Responsible field */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Person Responsible"
+                      value={formData.responsiblePerson}
+                      onChange={handleChange('responsiblePerson')}
+                    />
+                  </Grid>
+                  {/* Renewal Due Date picker */}
+                  <Grid item xs={12}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns}>
+                      <DatePicker
+                        label="Renewal Due Date"
+                        value={formData.renewalDueDate}
+                        onChange={handleDateChange('renewalDueDate')}
+                        renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth />}
+                      />
+                    </LocalizationProvider>
+                  </Grid>
+                  {/* Comments field */}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Comments"
+                      value={formData.comments}
+                      onChange={handleChange('comments')}
+                      multiline
+                      rows={4}
+                    />
+                  </Grid>
+                  {/* Save Button */}
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      fullWidth
+                    >
+                      Save Metadata
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
+            </Paper>
+          </Grid>
+
+          {/* Right Side - Certificate Details */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 4, height: '100%' }}>
+              <Typography variant="h4" gutterBottom>
+                Certificate Details
+              </Typography>
+              <Grid container spacing={3}>
+                {/* Certificate Name */}
+                <Grid item xs={12}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Certificate Name"
+                    value={formData.name}
                   />
-                </LocalizationProvider>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <DateTimePicker
-                    label="Valid To"
-                    value={formData.validTo}
-                    onChange={handleDateChange('validTo')}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Issuer"
+                    value={formData.issuer}
                   />
-                </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DateTimePicker
+                      label="Valid From"
+                      value={formData.validFrom}
+                      disabled
+                      onChange={() => {}} // Add no-op handler
+                      renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth disabled />}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DateTimePicker
+                      label="Valid To"
+                      value={formData.validTo}
+                      disabled
+                      onChange={() => {}} // Add no-op handler
+                      renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth disabled />}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Serial Number"
+                    value={formData.serialNumber}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Subject"
+                    value={formData.subject}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Organization"
+                    value={formData.organization}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled
+                    fullWidth
+                    label="Organizational Unit"
+                    value={formData.organizationalUnit}
+                  />
+                </Grid>
+                {/* Add Last Updated field at the end */}
+                <Grid item xs={12}>
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <DateTimePicker
+                      label="Last Updated"
+                      value={formData.lastUpdated}
+                      disabled
+                      onChange={() => {}}
+                      renderInput={(params: TextFieldProps) => <TextField {...params} fullWidth disabled />}
+                    />
+                  </LocalizationProvider>
+                </Grid>
               </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Serial Number"
-                  value={formData.serialNumber}
-                  onChange={handleChange('serialNumber')}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Subject"
-                  value={formData.subject}
-                  onChange={handleChange('subject')}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Organization"
-                  value={formData.organization}
-                  onChange={handleChange('organization')}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Organizational Unit"
-                  value={formData.organizationalUnit}
-                  onChange={handleChange('organizationalUnit')}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                >
-                  Save Certificate
-                </Button>
-              </Grid>
-            </Grid>
-          </form>
-        </Paper>
-      </Collapse>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
     </Box>
   );
 };
