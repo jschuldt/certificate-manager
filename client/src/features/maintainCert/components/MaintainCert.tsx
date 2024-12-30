@@ -119,8 +119,25 @@ export const CertificateSearch: React.FC = () => {
     if (currentRecordIndex < searchResults.length - 1) {
       setCurrentRecordIndex(currentRecordIndex + 1);
       const nextCert = searchResults[currentRecordIndex + 1];
-      setSelectedCertificate(null); // Clear first
-      setTimeout(() => setSelectedCertificate(nextCert), 0); // Set on next tick
+      // Clear current certificate and form data
+      setSelectedCertificate(null);
+      setFormData({
+        name: '',
+        issuer: '',
+        validFrom: new Date(),
+        validTo: new Date(),
+        serialNumber: '',
+        subject: '',
+        organization: '',
+        organizationalUnit: '',
+        website: '',
+        responsiblePerson: '',
+        renewalDueDate: new Date(),
+        comments: '',
+        lastUpdated: new Date()
+      });
+      // Set new certificate on next tick
+      setTimeout(() => setSelectedCertificate(nextCert), 50);
     }
   };
 
@@ -128,8 +145,25 @@ export const CertificateSearch: React.FC = () => {
     if (currentRecordIndex > 0) {
       setCurrentRecordIndex(currentRecordIndex - 1);
       const prevCert = searchResults[currentRecordIndex - 1];
-      setSelectedCertificate(null); // Clear first
-      setTimeout(() => setSelectedCertificate(prevCert), 0); // Set on next tick
+      // Clear current certificate and form data
+      setSelectedCertificate(null);
+      setFormData({
+        name: '',
+        issuer: '',
+        validFrom: new Date(),
+        validTo: new Date(),
+        serialNumber: '',
+        subject: '',
+        organization: '',
+        organizationalUnit: '',
+        website: '',
+        responsiblePerson: '',
+        renewalDueDate: new Date(),
+        comments: '',
+        lastUpdated: new Date()
+      });
+      // Set new certificate on next tick
+      setTimeout(() => setSelectedCertificate(prevCert), 50);
     }
   };
 
@@ -290,7 +324,7 @@ export const CertificateSearch: React.FC = () => {
           p: 0.25,
           display: 'flex',
           flexDirection: 'column',
-          gap: 0.75  // Use gap instead of margin for more stable layout
+          gap: 1.25  // Increased from 1 to 2 (equivalent to 16px)
         }}
       >
         {fields.map((field, index) => (
@@ -326,7 +360,9 @@ export const CertificateSearch: React.FC = () => {
                         '& .MuiInputLabel-root': {
                           fontSize: '0.8rem',
                           lineHeight: '1',
-                          transform: 'translate(14px, 12px) scale(1)'
+                          '&.Mui-focused, &.MuiFormLabel-filled': {
+                            transform: 'translate(14px, -9px) scale(0.75)'
+                          }
                         },
                         '& .MuiOutlinedInput-input': {
                           fontSize: '0.8rem',
@@ -360,7 +396,9 @@ export const CertificateSearch: React.FC = () => {
                   '& .MuiInputLabel-root': {
                     fontSize: '0.8rem',
                     lineHeight: '1',
-                    transform: 'translate(14px, 8px) scale(1)'
+                    '&.Mui-focused, &.MuiFormLabel-filled': {
+                      transform: 'translate(14px, -9px) scale(0.75)'
+                    }
                   },
                   '& .MuiOutlinedInput-input': {
                     fontSize: '0.8rem',
@@ -650,7 +688,7 @@ export const CertificateSearch: React.FC = () => {
               <Paper sx={{ 
                 display: 'flex',
                 flexDirection: 'column',
-                height: '600px',
+                height: '700px', // Increased from 600px
                 position: 'relative',
                 backgroundColor: 'white'
               }}>
@@ -797,7 +835,7 @@ export const CertificateSearch: React.FC = () => {
               <Paper sx={{ 
                 display: 'flex',
                 flexDirection: 'column',
-                height: '600px',
+                height: '700px', // Increased from 600px
                 position: 'relative',
                 backgroundColor: 'white',
                 mr: 8
