@@ -45,12 +45,25 @@ const swaggerOptions = {
       },
       '/users/search': {
         ...apiDocs.paths['/users/search']
+      },
+      '/users/login': {
+        ...apiDocs.paths['/users/login']
       }
     },
     components: {
       schemas: {
         // ...existing schemas...
-        User: apiDocs.components.schemas.User
+        User: {
+          ...apiDocs.components.schemas.User,
+          properties: {
+            ...apiDocs.components.schemas.User.properties,
+            password: {
+              type: 'string',
+              format: 'password',
+              description: 'User password (not included in responses)'
+            }
+          }
+        }
       }
     }
   },

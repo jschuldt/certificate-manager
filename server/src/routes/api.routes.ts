@@ -45,6 +45,30 @@ router.get('/check-certificate', async (req, res) => {
 });
 
 // User routes
+
+// Add this before other user routes
+router.post('/users/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = await userService.login(email, password);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json(userResponse);
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
 router.post('/users', async (req, res) => {
   try {
     const user = await userService.create(req.body);

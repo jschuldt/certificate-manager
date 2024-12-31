@@ -1,7 +1,11 @@
 import User, { IUser } from '../models/user.model';
+import { comparePassword, hashPassword } from '../utils/password.utils';
 
 export class UserService {
     async create(userData: Partial<IUser>): Promise<IUser> {
+        if (userData.password) {
+            userData.password = await hashPassword(userData.password);
+        }
         const user = new User(userData);
         return await user.save();
     }
@@ -54,6 +58,14 @@ export class UserService {
         }
 
         return await User.find(searchCriteria);
+    }
+
+    async login(email: string, password: string): Promise<IUser | null> {
+        const user = await User.findOne({ email, isDeleted: false });
+        if (!user) return null;
+
+        const isValid = await comparePassword(password, user.password);
+        return isValid ? user : null;
     }
 }
 

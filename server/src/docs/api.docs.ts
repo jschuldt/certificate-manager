@@ -499,11 +499,12 @@ export const apiDocs = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['firstName', 'lastName', 'email'],
+                required: ['firstName', 'lastName', 'email', 'password'],
                 properties: {
                   firstName: { type: 'string' },
                   lastName: { type: 'string' },
                   email: { type: 'string', format: 'email' },
+                  password: { type: 'string', format: 'password' },
                   notificationPreferences: {
                     type: 'array',
                     items: { type: 'string' }
@@ -617,6 +618,7 @@ export const apiDocs = {
                   firstName: { type: 'string' },
                   lastName: { type: 'string' },
                   email: { type: 'string', format: 'email' },
+                  password: { type: 'string', format: 'password' },
                   notificationPreferences: {
                     type: 'array',
                     items: { type: 'string' }
@@ -686,6 +688,48 @@ export const apiDocs = {
                 }
               }
             }
+          }
+        }
+      }
+    },
+    '/users/login': {
+      post: {
+        tags: ['Users'],
+        summary: 'Login user',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: {
+                    type: 'string',
+                    format: 'email'
+                  },
+                  password: {
+                    type: 'string',
+                    format: 'password'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'User logged in successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/User'
+                }
+              }
+            }
+          },
+          401: {
+            description: 'Invalid credentials'
           }
         }
       }
