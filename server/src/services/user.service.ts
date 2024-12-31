@@ -28,6 +28,9 @@ export class UserService {
     }
 
     async update(id: string, userData: Partial<IUser>): Promise<IUser | null> {
+        if (userData.password) {
+            userData.password = await hashPassword(userData.password);
+        }
         return await User.findOneAndUpdate(
             { _id: id, isDeleted: false },
             { $set: userData },
