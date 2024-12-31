@@ -6,7 +6,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { config } from './config/environment';
 import { errorHandler } from './middlewares/error.middleware';
-import apiRoutes from './routes';
+import apiRoutes from './routes/index.routes';
 import swaggerOptions from './config/swagger';
 import { connectDB } from './config/database';
 
@@ -66,7 +66,7 @@ const startServer = async () => {
   try {
     // Connect to MongoDB first
     await connectDB();
-    
+
     app.listen(PORT, () => {
       console.log('=================================');
       console.log(`🚀 Server is up and running!`);
