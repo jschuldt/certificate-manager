@@ -16,17 +16,18 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { createCertificate, updateCertificate, deleteCertificate } from '../../../services/api/certificate';
+import { createCertificate, updateCertificate, deleteCertificate } from '../../../services/api/certificate.services';
+import { CreateCertFormData, CreateCertificateDetails } from '../../../types/index.types';
 
 export const CreateCertificate: React.FC = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateCertFormData>({
     website: '',
     responsiblePerson: '',
     renewalDueDate: new Date(),
     comments: '',
   });
 
-  const [certificateDetails, setCertificateDetails] = useState({
+  const [certificateDetails, setCertificateDetails] = useState<CreateCertificateDetails>({
     name: '',
     issuer: '',
     validFrom: new Date(),

@@ -1,85 +1,25 @@
-import { api } from './config';
-import { ApiResponse } from '../../types';
+import { api } from './config.services';
+import {
+  ApiResponse,
+  Certificate,
+  CertificateResponse,
+  CertificateSearchParams,
+  SearchResponse,
+  CertManager,
+  CertificateUpdateParams,
+  CreateCertificateData
+} from '../../types/index.types';
 import axios, { AxiosError } from 'axios';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
-
-interface CertificateResponse {
-  message: string;
-  queryUrl: string;
-  timestamp: string;
-}
-
-export interface CertificateSearchParams {
-  name?: string;
-  issuer?: string;
-  website?: string;
-  organization?: string;
-  responsiblePerson?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface Certificate {
-  _id: string;  // Change from id to _id to match MongoDB
-  id: string;   // Keep this for backward compatibility
-  name: string | null;
-  issuer: string | null;
-  validFrom: string | null;
-  validTo: string | null;
-  serialNumber: string | null;
-  subject: string | null;
-  organization: string | null;
-  organizationalUnit: string | null;
-  certLastQueried: string | null;
-  metadata: {
-    country: string | null;
-    state: string | null;
-    locality: string | null;
-    alternativeNames: string[] | null;
-    fingerprint: string | null;
-    bits: number | null;
-  } | null;
-  certManager: CertManager;
-}
-
-export interface SearchResponse {
-  certificates: Certificate[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
-export interface CertManager {
-  website: string;
-  responsiblePerson: string;
-  alertDate?: string;
-  comments: string;
-}
-
-export interface CertificateUpdateParams {
-  website: string;
-  responsiblePerson: string;
-  alertDate?: string;
-  comments: string;
-}
-
-export interface CreateCertificateData {
-  certManager: {
-    website: string;
-    responsiblePerson: string;
-    alertDate: string;
-    comments: string;
-  };
-}
 
 const checkNetworkStatus = async () => {
   if (!navigator.onLine) {
     throw new Error('No internet connection available');
   }
-  
+
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3443';
-  
+
   if (isDevelopment) {
     console.log('🔍 Checking server availability at:', apiUrl);
     console.log('Environment variables:', {
@@ -93,7 +33,7 @@ const checkNetworkStatus = async () => {
       method: 'HEAD',
       mode: 'no-cors'
     });
-    
+
     if (isDevelopment) {
       console.log('🔍 Server test response:', testResponse);
     }
@@ -143,7 +83,7 @@ api.interceptors.request.use(
 export const checkCertificate = async (url: string): Promise<ApiResponse<CertificateResponse>> => {
   try {
     await checkNetworkStatus();
-    
+
     const normalizedUrl = normalizeUrl(url);
     if (isDevelopment) {
       console.log('Normalized URL:', normalizedUrl);
@@ -153,7 +93,7 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
     const response = await api.get('/api/check-certificate', {
       params: { url: normalizedUrl }
     });
-    
+
     if (isDevelopment) {
       console.log('Full API Response:', {
         status: response.status,
@@ -161,7 +101,7 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
         data: response.data
       });
     }
-    
+
     return response.data;
   } catch (error) {
     if (isDevelopment) {
@@ -186,10 +126,10 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
       if (!error.response) {
         throw new Error(`Network error: Unable to reach the server. Details: ${error.message}`);
       }
-      
+
       const errorMessage = error.response.data?.message || error.message;
       const errorDetails = error.response.data?.details || '';
-      
+
       switch (error.response.status) {
         case 500:
           throw new Error(
@@ -201,7 +141,7 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
           throw new Error('API endpoint not found. Please check the server configuration.');
         default:
           throw new Error(
-            error.response.data?.message || 
+            error.response.data?.message ||
             `Server error (${error.response.status}): ${error.message}`
           );
       }
@@ -214,7 +154,7 @@ export const searchCertificates = async (params: CertificateSearchParams): Promi
   try {
     console.log('Attempting to search certificates with params:', params);
     // Update the endpoint to match the swagger docs
-    const response = await api.get('/api/certificates/search', { 
+    const response = await api.get('/api/certificates/search', {
       params,
       // Add timeout and better error handling
       timeout: 5000,
@@ -229,7 +169,7 @@ export const searchCertificates = async (params: CertificateSearchParams): Promi
       url: '/api/certificates/search',
       params
     });
-    
+
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 404) {
         throw new Error('Certificate search endpoint not found. Please check API configuration.');
@@ -282,7 +222,7 @@ export const deleteCertificate = async (id: string): Promise<void> => {
         response: axios.isAxiosError(error) ? error.response : null
       });
     }
-    
+
     if (axios.isAxiosError(error)) {
       if (!error.response) {
         throw new Error('Network error: Unable to reach the server');
@@ -291,7 +231,7 @@ export const deleteCertificate = async (id: string): Promise<void> => {
         throw new Error('Certificate not found');
       }
       throw new Error(
-        error.response.data?.message || 
+        error.response.data?.message ||
         `Server error (${error.response.status}): ${error.message}`
       );
     }
@@ -320,7 +260,7 @@ export const updateCertificate = async (id: string, data: CertificateUpdateParam
         throw new Error('Network error: Unable to reach the server');
       }
       throw new Error(
-        error.response.data?.message || 
+        error.response.data?.message ||
         `Server error (${error.response.status}): ${error.message}`
       );
     }

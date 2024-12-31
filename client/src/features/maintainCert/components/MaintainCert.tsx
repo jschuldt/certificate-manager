@@ -19,17 +19,13 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { searchCertificates, updateCertificate, type Certificate, type SearchResponse, deleteCertificate } from '../../../services/api/certificate';
+import { searchCertificates, updateCertificate, deleteCertificate } from '../../../services/api/certificate.services';
+import { Certificate, SearchResponse } from '../../../types/index.types';
 import { parseISO, format } from 'date-fns';
 import { format as formatTz, utcToZonedTime } from 'date-fns-tz'; // Add date-fns-tz import
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-
-interface CertificateField {
-  label: string;
-  value: string | number | null;
-  type: 'text' | 'date' | 'number';
-}
+import { CertificateField } from '../../../types/index.types';
 
 export const CertificateSearch: React.FC = () => {
   // Add new state for navigation

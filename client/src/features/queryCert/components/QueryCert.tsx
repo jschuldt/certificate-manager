@@ -20,21 +20,9 @@ import {
 } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import GetAppIcon from '@mui/icons-material/GetApp';
-import { searchCertificates, Certificate, CertificateSearchParams } from '../../../services/api/certificate';
+import { searchCertificates } from '../../../services/api/certificate.services';
+import { CertificateSearchParams, SortConfig, Column, Certificate } from '../../../types/index.types';
 import * as XLSX from 'xlsx';
-
-// Add interface for sort
-interface SortConfig {
-  field: string;
-  direction: 'asc' | 'desc';
-}
-
-// Define column interface
-interface Column {
-  id: string;
-  label: string;
-  getValue: (cert: Certificate) => string | number | null;
-}
 
 // Define sortable columns
 const columns: Column[] = [

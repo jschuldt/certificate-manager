@@ -9,12 +9,8 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { checkCertificate } from '../../../services/api/certificate';
-
-interface ErrorDetails {
-  message: string;
-  technical?: string;
-}
+import { checkCertificate } from '../../../services/api/certificate.services';
+import { ErrorDetails } from '../../../types/index.types';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
