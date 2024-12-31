@@ -519,6 +519,29 @@ describe('API Routes', () => {
 
           expect(response.body.error).toBe('Failed to create user');
         });
+
+        it('should not return password in response when creating user', async () => {
+          const mockUser = {
+            id: '1',
+            email: 'new@example.com',
+            name: 'New User',
+            password: 'hashedpassword123'
+          };
+
+          (userService.create as jest.Mock).mockResolvedValue(mockUser);
+
+          const response = await request(app)
+            .post('/users')
+            .send({ email: 'new@example.com', name: 'New User', password: 'password123' })
+            .expect(201);
+
+          expect(response.body).not.toHaveProperty('password');
+          expect(response.body).toEqual({
+            id: '1',
+            email: 'new@example.com',
+            name: 'New User'
+          });
+        });
       });
 
       describe('GET /users', () => {
@@ -556,6 +579,29 @@ describe('API Routes', () => {
 
           expect(response.body.error).toBe('Failed to fetch users');
         });
+
+        it('should not return password in users list', async () => {
+          const mockUsersWithPasswords = {
+            users: [
+              { id: '1', name: 'User 1', email: 'user1@example.com', password: 'hash1' },
+              { id: '2', name: 'User 2', email: 'user2@example.com', password: 'hash2' }
+            ],
+            total: 2,
+            page: 1,
+            limit: 10
+          };
+
+          (userService.getAll as jest.Mock).mockResolvedValue(mockUsersWithPasswords);
+
+          const response = await request(app)
+            .get('/users')
+            .expect(200);
+
+          expect(response.body.users).toHaveLength(2);
+          response.body.users.forEach((user: { id: string; name: string; email: string }) => {
+            expect(user).not.toHaveProperty('password');
+          });
+        });
       });
 
       describe('GET /users/:id', () => {
@@ -587,6 +633,28 @@ describe('API Routes', () => {
             .expect(404);
 
           expect(response.body.error).toBe('User not found');
+        });
+
+        it('should not return password when getting user by id', async () => {
+          const mockUser = {
+            id: '123',
+            name: 'Test User',
+            email: 'test@example.com',
+            password: 'hashedpassword123'
+          };
+
+          (userService.getById as jest.Mock).mockResolvedValue(mockUser);
+
+          const response = await request(app)
+            .get('/users/123')
+            .expect(200);
+
+          expect(response.body).not.toHaveProperty('password');
+          expect(response.body).toEqual({
+            id: '123',
+            name: 'Test User',
+            email: 'test@example.com'
+          });
         });
       });
 
@@ -621,6 +689,29 @@ describe('API Routes', () => {
             .expect(404);
 
           expect(response.body.error).toBe('User not found');
+        });
+
+        it('should not return password in response when updating user', async () => {
+          const mockUpdatedUser = {
+            id: '123',
+            name: 'Updated Name',
+            email: 'updated@example.com',
+            password: 'hashedpassword123'
+          };
+
+          (userService.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
+
+          const response = await request(app)
+            .put('/users/123')
+            .send({ name: 'Updated Name' })
+            .expect(200);
+
+          expect(response.body).not.toHaveProperty('password');
+          expect(response.body).toEqual({
+            id: '123',
+            name: 'Updated Name',
+            email: 'updated@example.com'
+          });
         });
       });
 
