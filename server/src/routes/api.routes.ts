@@ -89,6 +89,24 @@ router.get('/users', async (req, res) => {
   }
 });
 
+// Move search route before the :id route to prevent parameter conflicts
+router.get('/users/search', async (req, res) => {
+  try {
+    const { query, firstName, lastName, email } = req.query;
+    const searchParams: any = {};
+    
+    if (query) searchParams.query = query;
+    if (firstName) searchParams.firstName = firstName;
+    if (lastName) searchParams.lastName = lastName;
+    if (email) searchParams.email = email;
+
+    const users = await userService.search(searchParams);
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+});
+
 router.get('/users/:id', async (req, res) => {
   try {
     const user = await userService.getById(req.params.id);
@@ -116,15 +134,6 @@ router.delete('/users/:id', async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete user' });
-  }
-});
-
-router.get('/users/search', async (req, res) => {
-  try {
-    const users = await userService.search(req.query);
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to search users' });
   }
 });
 

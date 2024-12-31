@@ -2,9 +2,13 @@ import request from 'supertest';
 import express from 'express';
 import apiRoutes from '../../routes/api.routes';
 import { certificateController } from '../../controllers/certificate.controller';
+import { userService } from '../../services/user.service';
 
 // Mock the certificate controller
 jest.mock('../../controllers/certificate.controller');
+
+// Add userService mock
+jest.mock('../../services/user.service');
 
 const app = express();
 app.use(express.json());
@@ -346,6 +350,269 @@ describe('API Routes', () => {
 
       expect(response.body).toHaveProperty('error');
       expect(certificateController.bulkCreate).toHaveBeenCalled();
+    });
+  });
+
+  describe('POST /users/login', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should login user successfully', async () => {
+      const mockUser = {
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User'
+      };
+
+      (userService.login as jest.Mock).mockResolvedValue({
+        toObject: () => ({ ...mockUser, password: 'hashedpass' })
+      });
+
+      const response = await request(app)
+        .post('/users/login')
+        .send({ email: 'test@example.com', password: 'password123' })
+        .expect(200);
+
+      expect(response.body).toEqual(mockUser);
+      expect(response.body).not.toHaveProperty('password');
+    });
+
+    it('should handle invalid credentials', async () => {
+      (userService.login as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .post('/users/login')
+        .send({ email: 'wrong@example.com', password: 'wrongpass' })
+        .expect(401);
+
+      expect(response.body.error).toBe('Invalid credentials');
+    });
+
+    it('should handle missing credentials', async () => {
+      const response = await request(app)
+        .post('/users/login')
+        .send({})
+        .expect(400);
+
+      expect(response.body.error).toBe('Email and password are required');
+    });
+  });
+
+  describe('POST /users', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should create user successfully', async () => {
+      const mockUser = {
+        id: '1',
+        email: 'new@example.com',
+        name: 'New User'
+      };
+
+      (userService.create as jest.Mock).mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .post('/users')
+        .send({ email: 'new@example.com', name: 'New User', password: 'password123' })
+        .expect(201);
+
+      expect(response.body).toEqual(mockUser);
+    });
+
+    it('should handle validation errors', async () => {
+      (userService.create as jest.Mock).mockRejectedValue(new Error('Validation failed'));
+
+      const response = await request(app)
+        .post('/users')
+        .send({ email: 'invalid' })
+        .expect(400);
+
+      expect(response.body.error).toBe('Failed to create user');
+    });
+  });
+
+  describe('GET /users', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should get all users with pagination', async () => {
+      const mockUsers = {
+        users: [
+          { id: '1', name: 'User 1', email: 'user1@example.com' },
+          { id: '2', name: 'User 2', email: 'user2@example.com' }
+        ],
+        total: 2,
+        page: 1,
+        limit: 10
+      };
+
+      (userService.getAll as jest.Mock).mockResolvedValue(mockUsers);
+
+      const response = await request(app)
+        .get('/users?page=1&limit=10')
+        .expect(200);
+
+      expect(response.body).toEqual(mockUsers);
+      expect(userService.getAll).toHaveBeenCalledWith(1, 10);
+    });
+
+    it('should handle errors when fetching users', async () => {
+      (userService.getAll as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .get('/users')
+        .expect(500);
+
+      expect(response.body.error).toBe('Failed to fetch users');
+    });
+  });
+
+  describe('GET /users/:id', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should get user by id successfully', async () => {
+      const mockUser = {
+        id: '123',
+        name: 'Test User',
+        email: 'test@example.com'
+      };
+
+      (userService.getById as jest.Mock).mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .get('/users/123')
+        .expect(200);
+
+      expect(response.body).toEqual(mockUser);
+    });
+
+    it('should handle non-existent user', async () => {
+      (userService.getById as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .get('/users/nonexistent')
+        .expect(404);
+
+      expect(response.body.error).toBe('User not found');
+    });
+  });
+
+  describe('PUT /users/:id', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should update user successfully', async () => {
+      const mockUpdatedUser = {
+        id: '123',
+        name: 'Updated Name',
+        email: 'updated@example.com'
+      };
+
+      (userService.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
+
+      const response = await request(app)
+        .put('/users/123')
+        .send({ name: 'Updated Name' })
+        .expect(200);
+
+      expect(response.body).toEqual(mockUpdatedUser);
+    });
+
+    it('should handle non-existent user update', async () => {
+      (userService.update as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .put('/users/nonexistent')
+        .send({ name: 'New Name' })
+        .expect(404);
+
+      expect(response.body.error).toBe('User not found');
+    });
+  });
+
+  describe('DELETE /users/:id', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should delete user successfully', async () => {
+      (userService.delete as jest.Mock).mockResolvedValue(true);
+
+      await request(app)
+        .delete('/users/123')
+        .expect(204);
+    });
+
+    it('should handle non-existent user deletion', async () => {
+      (userService.delete as jest.Mock).mockResolvedValue(false);
+
+      const response = await request(app)
+        .delete('/users/nonexistent')
+        .expect(404);
+
+      expect(response.body.error).toBe('User not found');
+    });
+  });
+
+  describe('GET /users/search', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should search users successfully', async () => {
+      const mockSearchResults = [
+        { id: '1', name: 'Test User', email: 'test@example.com' }
+      ];
+
+      (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
+
+      const response = await request(app)
+        .get('/users/search?firstName=Test&email=test@example.com')
+        .expect(200);
+
+      expect(response.body).toEqual(mockSearchResults);
+      expect(userService.search).toHaveBeenCalledWith({
+        firstName: 'Test',
+        email: 'test@example.com'
+      });
+    });
+
+    it('should handle empty search results', async () => {
+      (userService.search as jest.Mock).mockResolvedValue([]);
+
+      const response = await request(app)
+        .get('/users/search?query=nonexistent')
+        .expect(200);
+
+      expect(response.body).toEqual([]);
+      expect(userService.search).toHaveBeenCalledWith({
+        query: 'nonexistent'
+      });
+    });
+
+    it('should handle search with multiple parameters', async () => {
+      const mockSearchResults = [
+        { id: '1', name: 'Test User', email: 'test@example.com' }
+      ];
+
+      (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
+
+      const response = await request(app)
+        .get('/users/search?firstName=Test&lastName=User&email=test@example.com')
+        .expect(200);
+
+      expect(response.body).toEqual(mockSearchResults);
+      expect(userService.search).toHaveBeenCalledWith({
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'test@example.com'
+      });
     });
   });
 });
