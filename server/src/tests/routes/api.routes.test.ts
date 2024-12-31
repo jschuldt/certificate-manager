@@ -3,6 +3,8 @@ import express from 'express';
 import apiRoutes from '../../routes/api.routes';
 import { certificateController } from '../../controllers/certificate.controller';
 import { userService } from '../../services/user.service';
+import * as certificateUtils from '../../utils/certificate.utils';
+import * as mapperUtils from '../../utils/mapper.utils';
 
 // Mock the certificate controller
 jest.mock('../../controllers/certificate.controller');
@@ -10,13 +12,86 @@ jest.mock('../../controllers/certificate.controller');
 // Add userService mock
 jest.mock('../../services/user.service');
 
+// Add mocks for certificate utils
+jest.mock('../../utils/certificate.utils');
+jest.mock('../../utils/mapper.utils');
+
 const app = express();
 app.use(express.json());
 app.use('/', apiRoutes);
 
 describe('API Routes', () => {
-  it('should be defined', () => {
-    expect(apiRoutes).toBeDefined();
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('GET /alive', () => {
+    it('should return alive status with timestamp', async () => {
+      const response = await request(app)
+        .get('/alive')
+        .expect(200);
+
+      expect(response.body).toHaveProperty('status', 'alive');
+      expect(response.body).toHaveProperty('timestamp');
+      expect(Date.parse(response.body.timestamp)).not.toBeNaN();
+    });
+  });
+
+  describe('GET /check-certificate', () => {
+    it('should check certificate successfully', async () => {
+      const mockCertInfo = {
+        subject: 'example.com',
+        issuer: 'Test CA',
+        validFrom: '2023-01-01',
+        validTo: '2024-01-01'
+      };
+
+      const mockMappedCertificate = {
+        domain: 'example.com',
+        issuer: 'Test CA',
+        expiryDate: '2024-01-01'
+      };
+
+      (certificateUtils.getCertificateInfo as jest.Mock).mockResolvedValue(mockCertInfo);
+      (mapperUtils.mapCertificateInfoToModel as jest.Mock).mockReturnValue(mockMappedCertificate);
+
+      const response = await request(app)
+        .get('/check-certificate?url=https://example.com')
+        .expect(200);
+
+      expect(response.body).toEqual(mockMappedCertificate);
+      expect(certificateUtils.getCertificateInfo).toHaveBeenCalledWith('https://example.com');
+      expect(mapperUtils.mapCertificateInfoToModel).toHaveBeenCalledWith(mockCertInfo);
+    });
+
+    it('should handle missing URL parameter', async () => {
+      const response = await request(app)
+        .get('/check-certificate')
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error', 'URL parameter is required');
+    });
+
+    it('should handle invalid URL parameter', async () => {
+      const response = await request(app)
+        .get('/check-certificate?url=')
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error', 'URL parameter is required');
+    });
+
+    it('should handle certificate fetch errors', async () => {
+      (certificateUtils.getCertificateInfo as jest.Mock).mockRejectedValue(
+        new Error('Failed to fetch certificate')
+      );
+
+      const response = await request(app)
+        .get('/check-certificate?url=https://invalid.com')
+        .expect(500);
+
+      expect(response.body).toHaveProperty('error', 'Failed to fetch certificate info');
+      expect(response.body).toHaveProperty('details', 'Failed to fetch certificate');
+    });
   });
 
   describe('POST /certificates', () => {
