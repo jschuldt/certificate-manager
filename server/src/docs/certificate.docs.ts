@@ -479,5 +479,42 @@ export const certificateDocs = {
                 400: { description: 'Invalid input' }
             }
         }
+    },
+
+    certificateRefresh: {
+        post: {
+            tags: ['Certificates'],
+            summary: 'Refresh certificate information from website',
+            parameters: [
+                {
+                    in: 'path',
+                    name: 'id',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Certificate ID'
+                },
+                {
+                    in: 'query',
+                    name: 'website',
+                    required: true,
+                    schema: { type: 'string' },
+                    description: 'Website URL to check certificate'
+                }
+            ],
+            responses: {
+                200: {
+                    description: 'Certificate refreshed successfully'
+                },
+                400: {
+                    description: 'Invalid input parameters'
+                },
+                404: {
+                    description: 'Certificate not found'
+                },
+                500: {
+                    description: 'Server error while refreshing certificate'
+                }
+            }
+        }
     }
 };

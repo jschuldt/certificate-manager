@@ -27,4 +27,7 @@ router.delete('/:id', certificateController.delete);
 // Create multiple certificates in a single request
 router.post('/bulk', certificateController.bulkCreate);
 
+// Refresh certificate information from website
+router.post('/:id/refresh', certificateController.refreshCertificate);
+
 export default router;

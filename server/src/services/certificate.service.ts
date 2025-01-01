@@ -1,5 +1,7 @@
 import { ICertificate } from '../types/certificate.types';
 import Certificate, { ICertificateDocument } from '../models/certificate.model';
+import { getCertificateInfo } from '../utils/certificate.utils';
+import { mapCertificateInfoToModel } from '../utils/mapper.utils';
 
 /**
  * Service class handling all certificate-related operations
@@ -230,6 +232,26 @@ export class CertificateService {
     } catch (error) {
       console.error('Bulk create operation error:', error);
       throw new Error('Failed to process bulk certificate creation');
+    }
+  }
+
+  /**
+   * Refreshes certificate information from the website
+   * @param {string} id - Certificate ID
+   * @param {string} website - Website URL to check
+   * @returns {Promise<ICertificateDocument | null>} Updated certificate
+   */
+  async refreshCertificate(id: string, website: string): Promise<ICertificateDocument | null> {
+    try {
+      const certInfo = await getCertificateInfo(website);
+      const updatedCertData = mapCertificateInfoToModel(certInfo);
+      return await this.updateCertificate(id, {
+        ...updatedCertData,
+        certLastQueried: new Date()
+      });
+    } catch (error) {
+      console.error('Failed to refresh certificate:', error);
+      throw error;
     }
   }
 }

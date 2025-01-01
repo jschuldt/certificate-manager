@@ -257,5 +257,44 @@ export const certificateController = {
         details: errorMessage
       });
     }
+  },
+
+  /**
+   * Refresh certificate information from website
+   * @param req.params.id - Certificate ID
+   * @param req.query.website - Website URL
+   * @returns Updated certificate object
+   */
+  async refreshCertificate(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { website } = req.query;
+
+      if (!website || typeof website !== 'string') {
+        return res.status(400).json({ error: 'Website parameter is required' });
+      }
+
+      if (!isValidMongoId(id)) {
+        return res.status(400).json({ error: 'Invalid certificate ID' });
+      }
+
+      // Validate URL format
+      if (!isValidUrl(website)) {
+        return res.status(400).json({ error: 'Invalid website URL format' });
+      }
+
+      const updatedCertificate = await certificateService.refreshCertificate(id, website);
+      if (!updatedCertificate) {
+        return res.status(404).json({ error: 'Certificate not found' });
+      }
+
+      res.json(updatedCertificate);
+    } catch (error) {
+      console.error('Certificate refresh error:', error);
+      res.status(500).json({
+        error: 'Failed to refresh certificate',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   }
 };

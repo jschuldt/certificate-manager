@@ -88,6 +88,77 @@ describe('Certificate Routes', () => {
                     .expect({ message: 'Invalid bulk certificate data' });
             });
         });
+
+        /**
+         * Certificate refresh endpoint tests
+         * Validates the refresh functionality for certificates
+         */
+        describe('POST /:id/refresh', () => {
+            it('should refresh certificate information', async () => {
+                const mockUpdatedCert = { 
+                    id: '1', 
+                    domain: 'test.com',
+                    certLastQueried: new Date().toISOString()
+                };
+                
+                (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(200).json(mockUpdatedCert);
+                });
+
+                await request(app)
+                    .post('/1/refresh')
+                    .query({ website: 'https://test.com' })
+                    .expect(200)
+                    .expect(mockUpdatedCert);
+            });
+
+            it('should handle missing website parameter', async () => {
+                (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(400).json({ error: 'Website parameter is required' });
+                });
+
+                await request(app)
+                    .post('/1/refresh')
+                    .expect(400)
+                    .expect({ error: 'Website parameter is required' });
+            });
+
+            it('should handle invalid certificate ID', async () => {
+                (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(400).json({ error: 'Invalid certificate ID' });
+                });
+
+                await request(app)
+                    .post('/invalid-id/refresh')
+                    .query({ website: 'https://test.com' })
+                    .expect(400)
+                    .expect({ error: 'Invalid certificate ID' });
+            });
+
+            it('should handle certificate not found', async () => {
+                (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(404).json({ error: 'Certificate not found' });
+                });
+
+                await request(app)
+                    .post('/1/refresh')
+                    .query({ website: 'https://test.com' })
+                    .expect(404)
+                    .expect({ error: 'Certificate not found' });
+            });
+
+            it('should handle invalid website URL', async () => {
+                (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(400).json({ error: 'Invalid website URL format' });
+                });
+
+                await request(app)
+                    .post('/1/refresh')
+                    .query({ website: 'invalid-url' })
+                    .expect(400)
+                    .expect({ error: 'Invalid website URL format' });
+            });
+        });
     });
 
     /**

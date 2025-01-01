@@ -47,6 +47,9 @@ const swaggerOptions = {
       '/certificates/bulk': {
         ...apiDocs.paths['/certificates/bulk']
       },
+      '/certificates/{id}/refresh': {
+        ...apiDocs.paths.certificateRefresh
+      },
       // Add user paths
       '/users': {
         ...apiDocs.paths['/users']
