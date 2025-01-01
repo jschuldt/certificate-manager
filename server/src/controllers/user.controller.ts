@@ -1,7 +1,16 @@
 import { Request, Response } from 'express';
 import { userService } from '../services/user.service';
 
+/**
+ * User controller handling all user-related HTTP requests
+ */
 export const userController = {
+    /**
+     * Authenticate user with email and password
+     * @param req.body.email - User's email address
+     * @param req.body.password - User's password
+     * @returns User object with auth token if successful
+     */
     async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
@@ -22,6 +31,11 @@ export const userController = {
         }
     },
 
+    /**
+     * Create a new user account
+     * @param req.body - User creation payload containing user details
+     * @returns Newly created user object
+     */
     async create(req: Request, res: Response) {
         try {
             const user = await userService.create(req.body);
@@ -31,6 +45,12 @@ export const userController = {
         }
     },
 
+    /**
+     * Retrieve paginated list of users
+     * @param req.query.page - Page number for pagination (default: 1)
+     * @param req.query.limit - Number of items per page (default: 10)
+     * @returns Paginated list of users
+     */
     async getAll(req: Request, res: Response) {
         try {
             const page = Number(req.query.page) || 1;
@@ -42,6 +62,14 @@ export const userController = {
         }
     },
 
+    /**
+     * Search users based on various criteria
+     * @param req.query.query - General search query
+     * @param req.query.firstName - Filter by first name
+     * @param req.query.lastName - Filter by last name
+     * @param req.query.email - Filter by email
+     * @returns Filtered list of users matching criteria
+     */
     async search(req: Request, res: Response) {
         try {
             const { query, firstName, lastName, email } = req.query;
@@ -59,6 +87,11 @@ export const userController = {
         }
     },
 
+    /**
+     * Retrieve a specific user by ID
+     * @param req.params.id - User ID to fetch
+     * @returns Single user object if found
+     */
     async getById(req: Request, res: Response) {
         try {
             const user = await userService.getById(req.params.id);
@@ -69,6 +102,12 @@ export const userController = {
         }
     },
 
+    /**
+     * Update an existing user's information
+     * @param req.params.id - User ID to update
+     * @param req.body - Updated user data
+     * @returns Updated user object
+     */
     async update(req: Request, res: Response) {
         try {
             const user = await userService.update(req.params.id, req.body);
@@ -79,6 +118,11 @@ export const userController = {
         }
     },
 
+    /**
+     * Delete a user from the system
+     * @param req.params.id - User ID to delete
+     * @returns 204 No Content if successful
+     */
     async delete(req: Request, res: Response) {
         try {
             const success = await userService.delete(req.params.id);

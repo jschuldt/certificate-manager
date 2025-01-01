@@ -4,6 +4,11 @@ import { validateCertificateInput, isValidMongoId } from '../utils/validation.ut
 import { getCertificateInfo } from '../utils/certificate.utils';
 import { mapCertificateInfoToModel } from '../utils/mapper.utils';
 
+/**
+ * Transforms the flat request body into a nested certificate schema
+ * @param body - The request body containing certificate data
+ * @returns Transformed certificate object with nested metadata
+ */
 const transformRequestToSchema = (body: any) => {
   const {
     metadataCountry,
@@ -32,6 +37,11 @@ const transformRequestToSchema = (body: any) => {
   };
 };
 
+/**
+ * Validates if a string is a valid HTTP/HTTPS URL
+ * @param urlString - URL to validate
+ * @returns boolean indicating if URL is valid
+ */
 const isValidUrl = (urlString: string): boolean => {
   try {
     const url = new URL(urlString);
@@ -41,7 +51,15 @@ const isValidUrl = (urlString: string): boolean => {
   }
 };
 
+/**
+ * Certificate controller handling all certificate-related HTTP requests
+ */
 export const certificateController = {
+  /**
+   * Create a new certificate
+   * @param req.body - Certificate creation payload
+   * @returns Newly created certificate object
+   */
   async create(req: Request, res: Response) {
     try {
       const validationErrors = validateCertificateInput(req.body);
@@ -59,6 +77,12 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Retrieve a paginated list of certificates
+   * @param req.query.page - Page number (default: 1)
+   * @param req.query.limit - Items per page (default: 10)
+   * @returns Paginated list of certificates
+   */
   async getAll(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -71,6 +95,11 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Retrieve a specific certificate by ID
+   * @param req.params.id - Certificate ID
+   * @returns Single certificate object
+   */
   async getById(req: Request, res: Response) {
     try {
       if (!isValidMongoId(req.params.id)) {
@@ -84,6 +113,12 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Update an existing certificate
+   * @param req.params.id - Certificate ID to update
+   * @param req.body - Updated certificate data
+   * @returns Updated certificate object
+   */
   async update(req: Request, res: Response) {
     try {
       const validationErrors = validateCertificateInput(req.body);
@@ -99,6 +134,11 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Delete a certificate
+   * @param req.params.id - Certificate ID to delete
+   * @returns 204 No Content if successful
+   */
   async delete(req: Request, res: Response) {
     try {
       const certificate = await certificateService.deleteCertificate(req.params.id);
@@ -109,6 +149,13 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Search certificates with pagination
+   * @param req.query - Search parameters
+   * @param req.query.page - Page number (default: 1)
+   * @param req.query.limit - Items per page (default: 10)
+   * @returns Paginated search results
+   */
   async search(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -120,6 +167,13 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Get certificates expiring within specified days
+   * @param req.params.days - Number of days to check expiration (default: 30)
+   * @param req.query.page - Page number (default: 1)
+   * @param req.query.limit - Items per page (default: 10)
+   * @returns Paginated list of expiring certificates
+   */
   async getExpiring(req: Request, res: Response) {
     try {
       const days = parseInt(req.params.days) || 30;
@@ -132,6 +186,11 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Create multiple certificates in bulk
+   * @param req.body - Array of certificate objects to create
+   * @returns Object containing successful and failed operations
+   */
   async bulkCreate(req: Request, res: Response) {
     try {
       if (!Array.isArray(req.body)) {
@@ -166,6 +225,11 @@ export const certificateController = {
     }
   },
 
+  /**
+   * Check and retrieve certificate information from a URL
+   * @param req.query.url - URL to check certificate
+   * @returns Certificate information from the URL
+   */
   async checkCertificate(req: Request, res: Response) {
     try {
       const { url } = req.query;

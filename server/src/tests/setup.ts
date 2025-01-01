@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals';
 import { CertificateInfo } from '../types/certificate.types';
 
-// Mock certificate utils with synchronous responses
+// Mock the certificate utilities to provide predictable test data
+// This prevents actual certificate checks during testing
 jest.mock('../utils/certificate.utils', () => ({
     getCertificateInfo: jest.fn().mockImplementation((): Promise<CertificateInfo> =>
         Promise.resolve({
@@ -13,7 +14,8 @@ jest.mock('../utils/certificate.utils', () => ({
     )
 }));
 
-// Mock mapper utils with synchronous responses
+// Mock the mapper utilities to provide consistent data transformation
+// This ensures predictable data structure in tests
 jest.mock('../utils/mapper.utils', () => ({
     mapCertificateInfoToModel: jest.fn((certInfo: CertificateInfo) => ({
         domain: certInfo.subject,
@@ -22,9 +24,11 @@ jest.mock('../utils/mapper.utils', () => ({
     }))
 }));
 
+// Clear all mocks before each test to ensure clean test state
 beforeEach(() => {
     jest.clearAllMocks();
 });
 
-// Increase timeout
+// Set global test timeout to 30 seconds
+// Useful for tests that involve database operations or complex async operations
 jest.setTimeout(30000);

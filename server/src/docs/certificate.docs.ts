@@ -1,4 +1,11 @@
+/**
+ * OpenAPI documentation for Certificate Management API endpoints
+ */
 export const certificateDocs = {
+    /**
+     * Endpoint for checking SSL/TLS certificates of a given URL
+     * Used for initial certificate validation and information gathering
+     */
     checkCertificate: {
         get: {
             tags: ['Pull Certificate'],
@@ -29,6 +36,10 @@ export const certificateDocs = {
         }
     },
 
+    /**
+     * Core certificate management endpoints
+     * Handles CRUD operations for certificate records
+     */
     certificates: {
         post: {
             tags: ['Certificates'],
@@ -88,6 +99,10 @@ export const certificateDocs = {
                 400: { description: 'Invalid input' }
             }
         },
+        /**
+         * Retrieves paginated list of all certificates
+         * Supports pagination parameters for handling large datasets
+         */
         get: {
             tags: ['Certificates'],
             summary: 'Get all certificates',
@@ -147,7 +162,14 @@ export const certificateDocs = {
         }
     },
 
+    /**
+     * Single certificate operations
+     * Handles individual certificate retrieval, updates, and deletion
+     */
     certificateById: {
+        /**
+         * Retrieves detailed information about a specific certificate
+         */
         get: {
             tags: ['Certificates'],
             summary: 'Get certificate by ID',
@@ -162,6 +184,10 @@ export const certificateDocs = {
                 404: { description: 'Certificate not found' }
             }
         },
+        /**
+         * Updates certificate information
+         * Allows modification of both certificate data and management metadata
+         */
         put: {
             tags: ['Certificates'],
             summary: 'Update certificate by ID',
@@ -221,6 +247,10 @@ export const certificateDocs = {
                 400: { description: 'Invalid input' }
             }
         },
+        /**
+         * Removes certificate from the system
+         * This operation cannot be undone
+         */
         delete: {
             tags: ['Certificates'],
             summary: 'Delete certificate by ID',
@@ -237,6 +267,11 @@ export const certificateDocs = {
         }
     },
 
+    /**
+     * Certificate search functionality
+     * Provides flexible search capabilities across multiple certificate attributes
+     * Supports partial matching and pagination
+     */
     certificateSearch: {
         get: {
             tags: ['Certificates'],
@@ -315,6 +350,11 @@ export const certificateDocs = {
         }
     },
 
+    /**
+     * Expiring certificates monitoring
+     * Critical for certificate lifecycle management and renewal planning
+     * Default threshold is 30 days
+     */
     certificateExpiring: {
         get: {
             tags: ['Certificates'],
@@ -381,6 +421,11 @@ export const certificateDocs = {
         }
     },
 
+    /**
+     * Bulk certificate operations
+     * Enables batch processing for multiple certificates
+     * Useful for initial data import or mass updates
+     */
     '/certificates/bulk': {
         post: {
             tags: ['Certificates'],

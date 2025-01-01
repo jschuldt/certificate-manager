@@ -1,5 +1,15 @@
+/**
+ * OpenAPI documentation for system-related endpoints
+ * Contains endpoints for system health monitoring and maintenance
+ * @module systemDocs
+ */
 export const systemDocs = {
     '/alive': {
+        /**
+         * Health check endpoint
+         * Used for monitoring system availability and uptime
+         * Returns current timestamp for timing verification
+         */
         get: {
             tags: ['System'],
             summary: 'Health check endpoint',

@@ -1,23 +1,34 @@
 import { apiDocs } from '../docs/api.docs';
 
+/**
+ * Swagger/OpenAPI configuration object
+ * Defines the API documentation structure and endpoints
+ */
 const swaggerOptions = {
   definition: {
+    // OpenAPI version and basic API information
     openapi: '3.0.0',
     info: {
       title: 'Certificate Manager API',
       version: '1.0.0',
       description: 'API for managing SSL certificates'
     },
+    
+    // API server configuration
     servers: [
       {
         url: '/api',
         description: 'API server'
       }
     ],
+
+    // API endpoint definitions
     paths: {
+      // Health check endpoint
       '/alive': {  // Changed from '/' to '/alive'
         get: apiDocs.paths['/alive'].get
       },
+      // Certificate management endpoints
       '/check-certificate': {
         ...apiDocs.paths.checkCertificate
       },
@@ -50,6 +61,8 @@ const swaggerOptions = {
         ...apiDocs.paths['/users/login']
       }
     },
+
+    // Shared components (schemas, responses, etc.)
     components: {
       schemas: {
         ...apiDocs.components.schemas,
@@ -58,6 +71,7 @@ const swaggerOptions = {
       }
     }
   },
+  // Location of route files for Swagger to scan
   apis: ['./src/routes/*.ts']
 };
 

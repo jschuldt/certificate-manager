@@ -4,11 +4,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { config } from './config/environment';
+import { config } from './config/environment.config';
 import { errorHandler } from './middlewares/error.middleware';
 import apiRoutes from './routes/index.routes';
-import swaggerOptions from './config/swagger';
-import { connectDB } from './config/database';
+import swaggerOptions from './config/swagger.config';
+import { connectDB } from './config/database.config';
 
 const app = express();
 
