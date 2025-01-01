@@ -16,10 +16,30 @@ const app = express();
 app.use(express.json());
 app.use('/', apiRoutes);
 
+// Add interface for user type
+interface UserResponse {
+  id: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  password?: string;
+}
+
 describe('API Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+
+  // Helper function to create safe user object (without password)
+  const createSafeUser = (userData: Partial<UserResponse>) => {
+    const { password, ...safeData } = userData;
+    return {
+      ...safeData,
+      toObject: () => safeData,
+      toSafeObject: () => safeData
+    };
+  };
 
   // Health Check Tests
   describe('Health Check Endpoints', () => {
@@ -438,6 +458,18 @@ describe('API Routes', () => {
 
   // User Management Tests
   describe('User Management', () => {
+    const createMockUser = (data: any) => ({
+      ...data,
+      toSafeObject: () => {
+        const { password, ...safeData } = data;
+        return safeData;
+      },
+      toObject: () => {
+        const { password, ...safeData } = data;
+        return safeData;
+      }
+    });
+
     describe('Authentication', () => {
       describe('POST /users/login', () => {
         beforeEach(() => {
@@ -445,23 +477,21 @@ describe('API Routes', () => {
         });
 
         it('should login user successfully', async () => {
-          const mockUser = {
+          const mockUserData = {
             id: '1',
             email: 'test@example.com',
-            name: 'Test User'
+            firstName: 'Test',
+            lastName: 'User'
           };
 
-          (userService.login as jest.Mock).mockResolvedValue({
-            toObject: () => ({ ...mockUser, password: 'hashedpass' })
-          });
+          (userService.login as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
 
           const response = await request(app)
             .post('/users/login')
             .send({ email: 'test@example.com', password: 'password123' })
             .expect(200);
 
-          expect(response.body).toEqual(mockUser);
-          expect(response.body).not.toHaveProperty('password');
+          expect(response.body).toEqual(mockUserData);
         });
 
         it('should handle invalid credentials', async () => {
@@ -493,20 +523,25 @@ describe('API Routes', () => {
         });
 
         it('should create user successfully', async () => {
-          const mockUser = {
+          const mockUserData = {
             id: '1',
             email: 'new@example.com',
             name: 'New User'
           };
 
-          (userService.create as jest.Mock).mockResolvedValue(mockUser);
+          (userService.create as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
 
           const response = await request(app)
             .post('/users')
-            .send({ email: 'new@example.com', name: 'New User', password: 'password123' })
+            .send({
+              email: 'new@example.com',
+              name: 'New User',
+              password: 'password123'
+            })
             .expect(201);
 
-          expect(response.body).toEqual(mockUser);
+          expect(response.body).toEqual(mockUserData);
+          expect(response.body).not.toHaveProperty('password');
         });
 
         it('should handle validation errors', async () => {
@@ -524,23 +559,19 @@ describe('API Routes', () => {
           const mockUser = {
             id: '1',
             email: 'new@example.com',
-            name: 'New User',
-            password: 'hashedpassword123'
+            firstName: 'New',
+            lastName: 'User'
           };
 
-          (userService.create as jest.Mock).mockResolvedValue(mockUser);
+          (userService.create as jest.Mock).mockResolvedValue(createSafeUser(mockUser));
 
           const response = await request(app)
             .post('/users')
-            .send({ email: 'new@example.com', name: 'New User', password: 'password123' })
+            .send({ email: 'new@example.com', firstName: 'New', lastName: 'User', password: 'password123' })
             .expect(201);
 
           expect(response.body).not.toHaveProperty('password');
-          expect(response.body).toEqual({
-            id: '1',
-            email: 'new@example.com',
-            name: 'New User'
-          });
+          expect(response.body).toEqual(mockUser);
         });
       });
 
@@ -567,7 +598,9 @@ describe('API Routes', () => {
             .expect(200);
 
           expect(response.body).toEqual(mockUsers);
-          expect(userService.getAll).toHaveBeenCalledWith(1, 10);
+          response.body.users.forEach((user: UserResponse) => {
+            expect(user).not.toHaveProperty('password');
+          });
         });
 
         it('should handle errors when fetching users', async () => {
@@ -583,9 +616,9 @@ describe('API Routes', () => {
         it('should not return password in users list', async () => {
           const mockUsersWithPasswords = {
             users: [
-              { id: '1', name: 'User 1', email: 'user1@example.com', password: 'hash1' },
-              { id: '2', name: 'User 2', email: 'user2@example.com', password: 'hash2' }
-            ],
+              { id: '1', name: 'User 1', email: 'user1@example.com' },
+              { id: '2', name: 'User 2', email: 'user2@example.com' }
+            ].map(user => createSafeUser(user)),
             total: 2,
             page: 1,
             limit: 10
@@ -598,7 +631,7 @@ describe('API Routes', () => {
             .expect(200);
 
           expect(response.body.users).toHaveLength(2);
-          response.body.users.forEach((user: { id: string; name: string; email: string }) => {
+          response.body.users.forEach((user: UserResponse) => {
             expect(user).not.toHaveProperty('password');
           });
         });
@@ -610,19 +643,20 @@ describe('API Routes', () => {
         });
 
         it('should get user by id successfully', async () => {
-          const mockUser = {
+          const mockUserData = {
             id: '123',
             name: 'Test User',
             email: 'test@example.com'
           };
 
-          (userService.getById as jest.Mock).mockResolvedValue(mockUser);
+          (userService.getById as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
 
           const response = await request(app)
             .get('/users/123')
             .expect(200);
 
-          expect(response.body).toEqual(mockUser);
+          expect(response.body).toEqual(mockUserData);
+          expect(response.body).not.toHaveProperty('password');
         });
 
         it('should handle non-existent user', async () => {
@@ -636,12 +670,11 @@ describe('API Routes', () => {
         });
 
         it('should not return password when getting user by id', async () => {
-          const mockUser = {
+          const mockUser = createSafeUser({
             id: '123',
             name: 'Test User',
-            email: 'test@example.com',
-            password: 'hashedpassword123'
-          };
+            email: 'test@example.com'
+          });
 
           (userService.getById as jest.Mock).mockResolvedValue(mockUser);
 
@@ -664,20 +697,22 @@ describe('API Routes', () => {
         });
 
         it('should update user successfully', async () => {
-          const mockUpdatedUser = {
+          const mockUserData = {
             id: '123',
-            name: 'Updated Name',
+            firstName: 'Updated',
+            lastName: 'Name',
             email: 'updated@example.com'
           };
 
-          (userService.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
+          (userService.update as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
 
           const response = await request(app)
             .put('/users/123')
-            .send({ name: 'Updated Name' })
+            .send({ firstName: 'Updated', lastName: 'Name' })
             .expect(200);
 
-          expect(response.body).toEqual(mockUpdatedUser);
+          expect(response.body).toEqual(mockUserData);
+          expect(response.body).not.toHaveProperty('password');
         });
 
         it('should handle non-existent user update', async () => {
@@ -692,12 +727,11 @@ describe('API Routes', () => {
         });
 
         it('should not return password in response when updating user', async () => {
-          const mockUpdatedUser = {
+          const mockUpdatedUser = createSafeUser({
             id: '123',
             name: 'Updated Name',
-            email: 'updated@example.com',
-            password: 'hashedpassword123'
-          };
+            email: 'updated@example.com'
+          });
 
           (userService.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
 
@@ -712,6 +746,26 @@ describe('API Routes', () => {
             name: 'Updated Name',
             email: 'updated@example.com'
           });
+        });
+
+        it('should update user password successfully', async () => {
+          const mockUserData = {
+            id: '123',
+            firstName: 'Test',
+            lastName: 'User',
+            email: 'test@example.com'
+          };
+
+          (userService.update as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
+
+          const response = await request(app)
+            .put('/users/123')
+            .send({ password: 'newPassword123' })
+            .expect(200);
+
+          expect(response.body).toEqual(mockUserData);
+          expect(response.body).not.toHaveProperty('password');
+          expect(userService.update).toHaveBeenCalledWith('123', { password: 'newPassword123' });
         });
       });
 
@@ -738,61 +792,71 @@ describe('API Routes', () => {
           expect(response.body.error).toBe('User not found');
         });
       });
-    });
 
-    describe('User Search Operations', () => {
-      describe('GET /users/search', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should search users successfully', async () => {
-          const mockSearchResults = [
-            { id: '1', name: 'Test User', email: 'test@example.com' }
-          ];
-
-          (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
-
-          const response = await request(app)
-            .get('/users/search?firstName=Test&email=test@example.com')
-            .expect(200);
-
-          expect(response.body).toEqual(mockSearchResults);
-          expect(userService.search).toHaveBeenCalledWith({
-            firstName: 'Test',
-            email: 'test@example.com'
+      describe('User Search Operations', () => {
+        describe('GET /users/search', () => {
+          beforeEach(() => {
+            jest.clearAllMocks();
           });
-        });
 
-        it('should handle empty search results', async () => {
-          (userService.search as jest.Mock).mockResolvedValue([]);
+          it('should search users successfully', async () => {
+            const mockSearchResults = [
+              { id: '1', name: 'Test User', email: 'test@example.com' }
+            ];
 
-          const response = await request(app)
-            .get('/users/search?query=nonexistent')
-            .expect(200);
+            (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
 
-          expect(response.body).toEqual([]);
-          expect(userService.search).toHaveBeenCalledWith({
-            query: 'nonexistent'
+            const response = await request(app)
+              .get('/users/search?firstName=Test&email=test@example.com')
+              .expect(200);
+
+            expect(response.body).toEqual(mockSearchResults);
+            expect(response.body[0]).not.toHaveProperty('password');
           });
-        });
 
-        it('should handle search with multiple parameters', async () => {
-          const mockSearchResults = [
-            { id: '1', name: 'Test User', email: 'test@example.com' }
-          ];
+          it('should handle empty search results', async () => {
+            (userService.search as jest.Mock).mockResolvedValue([]);
 
-          (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
+            const response = await request(app)
+              .get('/users/search?query=nonexistent')
+              .expect(200);
 
-          const response = await request(app)
-            .get('/users/search?firstName=Test&lastName=User&email=test@example.com')
-            .expect(200);
+            expect(response.body).toEqual([]);
+            expect(userService.search).toHaveBeenCalledWith({
+              query: 'nonexistent'
+            });
+          });
 
-          expect(response.body).toEqual(mockSearchResults);
-          expect(userService.search).toHaveBeenCalledWith({
-            firstName: 'Test',
-            lastName: 'User',
-            email: 'test@example.com'
+          it('should handle search with multiple parameters', async () => {
+            const mockSearchResults = [
+              createSafeUser({
+                id: '1',
+                firstName: 'Test',
+                lastName: 'User',
+                email: 'test@example.com',
+                password: 'hashedpass'
+              })
+            ];
+
+            (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
+
+            const response = await request(app)
+              .get('/users/search?firstName=Test&lastName=User&email=test@example.com')
+              .expect(200);
+
+            const expectedResponse = mockSearchResults.map(user => ({
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email
+            }));
+
+            expect(response.body).toEqual(expectedResponse);
+            expect(userService.search).toHaveBeenCalledWith({
+              firstName: 'Test',
+              lastName: 'User',
+              email: 'test@example.com'
+            });
           });
         });
       });

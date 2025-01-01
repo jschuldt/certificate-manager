@@ -521,7 +521,12 @@ export const apiDocs = {
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/User'
+                  type: 'object',
+                  properties: {
+                    user: {
+                      $ref: '#/components/schemas/UserResponse'
+                    }
+                  }
                 }
               }
             }
@@ -563,10 +568,12 @@ export const apiDocs = {
                     users: {
                       type: 'array',
                       items: {
-                        $ref: '#/components/schemas/User'
+                        $ref: '#/components/schemas/UserResponse'
                       }
                     },
-                    total: { type: 'integer' }
+                    total: {
+                      type: 'integer'
+                    }
                   }
                 }
               }
@@ -591,7 +598,7 @@ export const apiDocs = {
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/UserResponse'
                 }
               }
             }
@@ -635,7 +642,7 @@ export const apiDocs = {
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/UserResponse'
                 }
               }
             }
@@ -683,7 +690,7 @@ export const apiDocs = {
                 schema: {
                   type: 'array',
                   items: {
-                    $ref: '#/components/schemas/User'
+                    $ref: '#/components/schemas/UserResponse'
                   }
                 }
               }
@@ -723,7 +730,7 @@ export const apiDocs = {
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/UserResponse'
                 }
               }
             }
@@ -738,10 +745,9 @@ export const apiDocs = {
   components: {
     schemas: {
       // ...existing code...
-      User: {
+      UserBase: {
         type: 'object',
         properties: {
-          _id: { type: 'string' },
           firstName: { type: 'string' },
           lastName: { type: 'string' },
           email: { type: 'string', format: 'email' },
@@ -749,11 +755,34 @@ export const apiDocs = {
             type: 'array',
             items: { type: 'string' }
           },
-          isActive: { type: 'boolean' },
-          isDeleted: { type: 'boolean' },
-          createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' }
+          isActive: { type: 'boolean' }
         }
+      },
+      UserCreate: {
+        allOf: [
+          { $ref: '#/components/schemas/UserBase' },
+          {
+            type: 'object',
+            required: ['firstName', 'lastName', 'email', 'password'],
+            properties: {
+              password: { type: 'string', format: 'password' }
+            }
+          }
+        ]
+      },
+      UserResponse: {
+        allOf: [
+          { $ref: '#/components/schemas/UserBase' },
+          {
+            type: 'object',
+            properties: {
+              _id: { type: 'string' },
+              isDeleted: { type: 'boolean' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' }
+            }
+          }
+        ]
       }
     }
   }

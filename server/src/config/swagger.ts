@@ -52,18 +52,9 @@ const swaggerOptions = {
     },
     components: {
       schemas: {
-        // ...existing schemas...
-        User: {
-          ...apiDocs.components.schemas.User,
-          properties: {
-            ...apiDocs.components.schemas.User.properties,
-            password: {
-              type: 'string',
-              format: 'password',
-              description: 'User password (not included in responses)'
-            }
-          }
-        }
+        ...apiDocs.components.schemas,
+        // Remove or update any User schema references here
+        // Use UserResponse instead
       }
     }
   },

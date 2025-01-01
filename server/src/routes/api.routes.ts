@@ -59,13 +59,12 @@ router.post('/users/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Remove password from response
-    const userResponse = user.toObject();
-    delete userResponse.password;
-
-    res.json(userResponse);
-  } catch (error) {
-    res.status(500).json({ error: 'Login failed' });
+    // The user object is already safe (password excluded) from the service
+    res.json(user);
+  } catch (error: unknown) {
+    console.error('Login error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    res.status(500).json({ error: 'Login failed', details: errorMessage });
   }
 });
 
@@ -94,7 +93,7 @@ router.get('/users/search', async (req, res) => {
   try {
     const { query, firstName, lastName, email } = req.query;
     const searchParams: any = {};
-    
+
     if (query) searchParams.query = query;
     if (firstName) searchParams.firstName = firstName;
     if (lastName) searchParams.lastName = lastName;

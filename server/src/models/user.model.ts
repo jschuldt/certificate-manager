@@ -1,5 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 
+export type SafeUser = Omit<IUser, 'password'>;
+
 export interface IUser extends Document {
     firstName: string;
     lastName: string;
@@ -10,6 +12,7 @@ export interface IUser extends Document {
     isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
+    toSafeObject(): SafeUser;
 }
 
 const userSchema = new Schema({
@@ -23,5 +26,11 @@ const userSchema = new Schema({
 }, {
     timestamps: true
 });
+
+userSchema.methods.toSafeObject = function () {
+    const userObject = this.toObject();
+    delete userObject.password;
+    return userObject;
+};
 
 export default model<IUser>('User', userSchema);
