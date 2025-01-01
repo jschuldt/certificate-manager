@@ -1,14 +1,16 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { ICertificate } from '../types/certificate.types';
 
-export interface ICertificateDocument extends ICertificate, Document {}
+export interface ICertificateDocument extends Document, ICertificate {
+  // Additional methods can be defined here if needed
+}
 
 const certificateSchema = new Schema(
   {
     name: { type: String },
-    issuer: { type: String},
-    validFrom: { type: Date},
-    validTo: { type: Date,},
+    issuer: { type: String },
+    validFrom: { type: Date },
+    validTo: { type: Date, },
     serialNumber: { type: String },
     subject: { type: String },
     organization: { type: String },
@@ -27,6 +29,7 @@ const certificateSchema = new Schema(
       website: { type: String, required: true }, // Only this field remains required
       responsiblePerson: { type: String },
       alertDate: { type: Date },
+      renewalDate: { type: Date },  // Add this field
       comments: { type: String }
     }
   },
