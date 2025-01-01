@@ -1,6 +1,11 @@
 import { ICertificate } from '../types/certificate.types';
 import { CertificateInfo } from './certificate.utils';
 
+/**
+ * Maps raw certificate information to database model structure
+ * @param certInfo Raw certificate information from SSL inspection
+ * @returns Partial certificate model ready for database storage
+ */
 export const mapCertificateInfoToModel = (certInfo: CertificateInfo): Partial<ICertificate> => {
   return {
     name: certInfo.website,

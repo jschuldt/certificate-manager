@@ -1,12 +1,27 @@
 import { ICertificate } from '../types/certificate.types';
 import Certificate, { ICertificateDocument } from '../models/certificate.model';
 
+/**
+ * Service class handling all certificate-related operations
+ * @class CertificateService
+ */
 export class CertificateService {
+  /**
+   * Creates a new certificate
+   * @param {ICertificate} certificateData - The certificate data to create
+   * @returns {Promise<ICertificateDocument>} The created certificate
+   */
   async createCertificate(certificateData: ICertificate): Promise<ICertificateDocument> {
     const certificate = new Certificate(certificateData);
     return await certificate.save();
   }
 
+  /**
+   * Retrieves a paginated list of all non-deleted certificates
+   * @param {number} page - Page number for pagination (default: 1)
+   * @param {number} limit - Number of items per page (default: 10)
+   * @returns {Promise<{certificates: ICertificateDocument[]; total: number; page: number; totalPages: number;}>}
+   */
   async getAllCertificates(page: number = 1, limit: number = 10): Promise<{
     certificates: ICertificateDocument[];
     total: number;
@@ -30,10 +45,21 @@ export class CertificateService {
     };
   }
 
+  /**
+   * Retrieves a single certificate by its ID
+   * @param {string} id - The certificate ID
+   * @returns {Promise<ICertificateDocument | null>} The certificate if found, null otherwise
+   */
   async getCertificateById(id: string): Promise<ICertificateDocument | null> {
     return await Certificate.findOne({ _id: id, deleted: { $ne: true } });
   }
 
+  /**
+   * Updates a certificate's information
+   * @param {string} id - The certificate ID
+   * @param {Partial<ICertificate>} certificateData - The data to update
+   * @returns {Promise<ICertificateDocument | null>} The updated certificate if found
+   */
   async updateCertificate(
     id: string,
     certificateData: Partial<ICertificate>
@@ -45,6 +71,11 @@ export class CertificateService {
     );
   }
 
+  /**
+   * Soft deletes a certificate
+   * @param {string} id - The certificate ID
+   * @returns {Promise<ICertificateDocument | null>} The deleted certificate
+   */
   async deleteCertificate(id: string): Promise<ICertificateDocument | null> {
     return await Certificate.findByIdAndUpdate(
       id,
@@ -53,6 +84,11 @@ export class CertificateService {
     );
   }
 
+  /**
+   * Searches for certificates based on multiple criteria
+   * @param {Object} query - Search parameters including pagination
+   * @returns {Promise<{certificates: ICertificateDocument[]; total: number; page: number; totalPages: number;}>}
+   */
   async searchCertificates(
     query: Partial<ICertificate> & { 
       website?: string;
@@ -107,6 +143,13 @@ export class CertificateService {
     };
   }
 
+  /**
+   * Retrieves certificates that are approaching expiration
+   * @param {number} daysThreshold - Number of days to consider for expiration
+   * @param {number} page - Page number for pagination
+   * @param {number} limit - Number of items per page
+   * @returns {Promise<{certificates: ICertificateDocument[]; total: number; page: number; totalPages: number;}>}
+   */
   async getExpiringCertificates(
     daysThreshold: number,
     page: number = 1,
@@ -144,6 +187,11 @@ export class CertificateService {
     };
   }
 
+  /**
+   * Bulk creates multiple certificates
+   * @param {ICertificate[]} certificatesData - Array of certificate data to create
+   * @returns {Promise<{successful: ICertificateDocument[]; failed: Array<{data: ICertificate; error: string}>;}>}
+   */
   async bulkCreateCertificates(certificatesData: ICertificate[]): Promise<{
     successful: ICertificateDocument[];
     failed: Array<{ data: ICertificate; error: string }>;

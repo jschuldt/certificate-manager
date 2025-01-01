@@ -2,7 +2,9 @@ import https from 'https';
 import { URL } from 'url';
 import { TLSSocket } from 'tls';
 
-// Add these interfaces
+/**
+ * Represents the subject/issuer fields in an X.509 certificate
+ */
 interface CertificateSubject {
   C?: string;  // Country
   ST?: string; // State
@@ -12,6 +14,9 @@ interface CertificateSubject {
   CN?: string; // Common Name
 }
 
+/**
+ * Raw certificate data as returned by TLS
+ */
 interface DetailedCertificate {
   issuer: CertificateSubject;
   subject: CertificateSubject;
@@ -23,6 +28,9 @@ interface DetailedCertificate {
   bits?: number;
 }
 
+/**
+ * Normalized certificate information for application use
+ */
 export interface CertificateInfo {
   website: string;
   issuer: string;
@@ -41,6 +49,12 @@ export interface CertificateInfo {
   bits: number;
 }
 
+/**
+ * Fetches and parses SSL certificate information from a website
+ * @param websiteUrl URL to fetch certificate from (with or without https://)
+ * @returns Promise resolving to normalized certificate information
+ * @throws Error if certificate cannot be retrieved or parsed
+ */
 export const getCertificateInfo = (websiteUrl: string): Promise<CertificateInfo> => {
   return new Promise((resolve, reject) => {
     try {

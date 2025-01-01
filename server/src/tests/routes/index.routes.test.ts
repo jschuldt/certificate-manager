@@ -9,6 +9,10 @@ const app = express();
 app.use(express.json());
 app.use('/', indexRoutes);
 
+/**
+ * Test suite for core application endpoints
+ * Tests health check and certificate verification functionality
+ */
 describe('Index Routes', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -16,6 +20,10 @@ describe('Index Routes', () => {
 
     // GET endpoints
     describe('GET Endpoints', () => {
+        /**
+         * Health check endpoint tests
+         * Verifies application status reporting
+         */
         describe('GET /alive', () => {
             it('should return health status', async () => {
                 const response = await request(app)
@@ -28,6 +36,11 @@ describe('Index Routes', () => {
             });
         });
 
+        /**
+         * Certificate verification endpoint tests
+         * Tests real-time certificate checking functionality
+         * Includes error handling for invalid URLs and unreachable domains
+         */
         describe('GET /check-certificate', () => {
             it('should check certificate', async () => {
                 const mockInfo = { domain: 'test.com', validTo: '2024-01-01' };

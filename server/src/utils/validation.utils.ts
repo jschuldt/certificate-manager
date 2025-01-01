@@ -1,11 +1,18 @@
 import { ICertificate } from '../types/certificate.types';
 
+/**
+ * Represents a validation error with field name and error message
+ */
 export interface ValidationError {
   field: string;
   message: string;
 }
 
-// Schema validation
+/**
+ * Validates required fields and schema constraints
+ * @param data Partial certificate data to validate
+ * @returns Array of validation errors, empty if valid
+ */
 export const validateSchema = (data: Partial<ICertificate>): ValidationError[] => {
   const errors: ValidationError[] = [];
 
@@ -20,7 +27,11 @@ export const validateSchema = (data: Partial<ICertificate>): ValidationError[] =
   return errors;
 };
 
-// Business rule validation
+/**
+ * Validates business logic rules such as date relationships
+ * @param data Partial certificate data to validate
+ * @returns Array of validation errors, empty if valid
+ */
 export const validateBusinessRules = (data: Partial<ICertificate>): ValidationError[] => {
   const errors: ValidationError[] = [];
 
@@ -51,7 +62,11 @@ export const validateBusinessRules = (data: Partial<ICertificate>): ValidationEr
   return errors;
 };
 
-// Format validation
+/**
+ * Validates format-specific rules like URL format
+ * @param data Partial certificate data to validate
+ * @returns Array of validation errors, empty if valid
+ */
 export const validateFormats = (data: Partial<ICertificate>): ValidationError[] => {
   const errors: ValidationError[] = [];
 
@@ -66,7 +81,11 @@ export const validateFormats = (data: Partial<ICertificate>): ValidationError[] 
   return errors;
 };
 
-// Main validation function that combines all validations
+/**
+ * Main validation function that combines all validation checks
+ * @param data Partial certificate data to validate
+ * @returns Combined array of all validation errors
+ */
 export const validateCertificateInput = (data: Partial<ICertificate>): ValidationError[] => {
   return [
     ...validateSchema(data),
@@ -75,11 +94,20 @@ export const validateCertificateInput = (data: Partial<ICertificate>): Validatio
   ];
 };
 
-// Utility functions
+/**
+ * Validates if a string is a valid MongoDB ObjectId
+ * @param id String to validate
+ * @returns boolean indicating if string is valid MongoDB ObjectId
+ */
 export const isValidMongoId = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
 
+/**
+ * Validates if a string is a valid URL
+ * @param url String to validate
+ * @returns boolean indicating if string is valid URL
+ */
 function isValidUrl(url: string): boolean {
   try {
     new URL(url.startsWith('http') ? url : `https://${url}`);

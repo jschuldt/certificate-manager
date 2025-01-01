@@ -9,14 +9,25 @@ const app = express();
 app.use(express.json());
 app.use('/', certificateRoutes);
 
+/**
+ * Test suite for certificate management endpoints
+ * Covers certificate CRUD operations, bulk operations, and specialized queries
+ */
 describe('Certificate Routes', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    // POST endpoints
+    /**
+     * Certificate creation endpoint tests
+     * Tests both single and bulk certificate creation
+     */
     describe('POST Endpoints', () => {
 
+        /**
+         * Single certificate creation tests
+         * Validates proper handling of valid and invalid certificate data
+         */
         describe('POST /', () => {
             it('should create certificate', async () => {
                 const mockCertificate = { domain: 'test.com', expiryDate: '2024-01-01' };
@@ -44,6 +55,10 @@ describe('Certificate Routes', () => {
             });
         });
 
+        /**
+         * Bulk certificate creation tests
+         * Verifies handling of multiple certificate creation requests
+         */
         describe('POST /bulk', () => {
             it('should create multiple certificates', async () => {
                 const mockCertificates = [
@@ -75,8 +90,15 @@ describe('Certificate Routes', () => {
         });
     });
 
-    // GET endpoints
+    /**
+     * Certificate retrieval endpoint tests
+     * Tests various ways to fetch certificate data
+     */
     describe('GET Endpoints', () => {
+        /**
+         * Tests for retrieving certificate listings
+         * Includes search and expiration filtering
+         */
         describe('GET /', () => {
             it('should get all certificates', async () => {
                 const mockCertificates = [{ id: '1', domain: 'test.com' }];
@@ -130,6 +152,10 @@ describe('Certificate Routes', () => {
             });
         });
 
+        /**
+         * Expiring certificates endpoint tests
+         * Validates retrieval of certificates nearing expiration
+         */
         describe('GET /expiring/:days', () => {
             it('should get expiring certificates', async () => {
                 const mockExpiring = [{ id: '1', domain: 'test.com' }];
@@ -156,7 +182,10 @@ describe('Certificate Routes', () => {
         });
     });
 
-    // PUT endpoints
+    /**
+     * Certificate update endpoint tests
+     * Verifies certificate modification functionality
+     */
     describe('PUT Endpoints', () => {
         describe('PUT /:id', () => {
             it('should update certificate', async () => {
@@ -186,7 +215,10 @@ describe('Certificate Routes', () => {
         });
     });
 
-    // DELETE endpoints
+    /**
+     * Certificate deletion endpoint tests
+     * Confirms certificate removal capabilities
+     */
     describe('DELETE Endpoints', () => {
         describe('DELETE /:id', () => {
             it('should delete certificate', async () => {

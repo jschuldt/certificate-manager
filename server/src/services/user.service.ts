@@ -1,7 +1,16 @@
 import User, { IUser, SafeUser } from '../models/user.model';
 import { comparePassword, hashPassword } from '../utils/password.utils';
 
+/**
+ * Service class handling all user-related operations
+ * @class UserService
+ */
 export class UserService {
+    /**
+     * Creates a new user in the system
+     * @param {Partial<IUser>} userData - The user data to create
+     * @returns {Promise<SafeUser>} The created user without sensitive information
+     */
     async create(userData: Partial<IUser>): Promise<SafeUser> {
         if (userData.password) {
             userData.password = await hashPassword(userData.password);
@@ -11,6 +20,12 @@ export class UserService {
         return user.toSafeObject();
     }
 
+    /**
+     * Retrieves a paginated list of all active users
+     * @param {number} page - Page number for pagination (default: 1)
+     * @param {number} limit - Number of items per page (default: 10)
+     * @returns {Promise<{users: SafeUser[]; total: number;}>} Paginated users and total count
+     */
     async getAll(page: number = 1, limit: number = 10): Promise<{ users: SafeUser[]; total: number; }> {
         const skip = (page - 1) * limit;
         const [users, total] = await Promise.all([
@@ -27,11 +42,22 @@ export class UserService {
         };
     }
 
+    /**
+     * Retrieves a single user by their ID
+     * @param {string} id - The user's ID
+     * @returns {Promise<SafeUser | null>} The user if found, null otherwise
+     */
     async getById(id: string): Promise<SafeUser | null> {
         const user = await User.findOne({ _id: id, isDeleted: false });
         return user ? user.toSafeObject() : null;
     }
 
+    /**
+     * Updates a user's information
+     * @param {string} id - The user's ID
+     * @param {Partial<IUser>} userData - The data to update
+     * @returns {Promise<SafeUser | null>} The updated user if found, null otherwise
+     */
     async update(id: string, userData: Partial<IUser>): Promise<SafeUser | null> {
         if (userData.password) {
             userData.password = await hashPassword(userData.password);
@@ -44,6 +70,11 @@ export class UserService {
         return user ? user.toSafeObject() : null;
     }
 
+    /**
+     * Soft deletes a user by setting isDeleted flag
+     * @param {string} id - The user's ID
+     * @returns {Promise<boolean>} True if successful, false otherwise
+     */
     async delete(id: string): Promise<boolean> {
         const result = await User.findOneAndUpdate(
             { _id: id, isDeleted: false },
@@ -53,6 +84,11 @@ export class UserService {
         return !!result;
     }
 
+    /**
+     * Searches for users based on provided criteria
+     * @param {Partial<IUser>} query - Search criteria
+     * @returns {Promise<SafeUser[]>} Array of matching users
+     */
     async search(query: Partial<IUser>): Promise<SafeUser[]> {
         const searchCriteria = { isDeleted: false };
 
@@ -70,6 +106,12 @@ export class UserService {
         return users.map(user => user.toSafeObject());
     }
 
+    /**
+     * Authenticates a user with email and password
+     * @param {string} email - User's email
+     * @param {string} password - User's password
+     * @returns {Promise<SafeUser | null>} Authenticated user or null if authentication fails
+     */
     async login(email: string, password: string): Promise<SafeUser | null> {
         const user = await User.findOne({ email, isDeleted: false });
         if (!user) {

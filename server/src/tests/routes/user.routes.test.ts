@@ -9,13 +9,22 @@ const app = express();
 app.use(express.json());
 app.use('/', userRoutes);
 
+/**
+ * Test suite for user-related API endpoints
+ * Tests authentication, user CRUD operations, and error handling
+ */
 describe('User Routes', () => {
+    // Reset all mocks before each test to ensure clean state
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
     // POST endpoints
     describe('POST Endpoints', () => {
+        /**
+         * Authentication endpoint tests
+         * Verifies login functionality and error handling
+         */
         describe('POST /login', () => {
             it('should login user', async () => {
                 const mockUser = { id: '1', email: 'test@test.com' };
@@ -43,6 +52,10 @@ describe('User Routes', () => {
             });
         });
 
+        /**
+         * User creation endpoint tests
+         * Validates user registration and duplicate handling
+         */
         describe('POST /', () => {
             it('should create user', async () => {
                 const mockUser = { id: '1', email: 'test@test.com' };
@@ -71,7 +84,10 @@ describe('User Routes', () => {
         });
     });
 
-    // GET endpoints
+    /**
+     * User retrieval endpoint tests
+     * Tests fetching user data through various methods
+     */
     describe('GET Endpoints', () => {
         describe('GET /', () => {
             it('should get all users', async () => {
@@ -127,7 +143,10 @@ describe('User Routes', () => {
         });
     });
 
-    // PUT endpoints
+    /**
+     * User update endpoint tests
+     * Verifies user data modification capabilities
+     */
     describe('PUT Endpoints', () => {
         describe('PUT /:id', () => {
             it('should update user', async () => {
@@ -157,7 +176,10 @@ describe('User Routes', () => {
         });
     });
 
-    // DELETE endpoints
+    /**
+     * User deletion endpoint tests
+     * Confirms user removal functionality
+     */
     describe('DELETE Endpoints', () => {
         describe('DELETE /:id', () => {
             it('should delete user', async () => {

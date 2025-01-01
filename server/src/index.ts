@@ -1,3 +1,7 @@
+/**
+ * Main application entry point.
+ * Sets up Express server with middleware, routes, and Swagger documentation.
+ */
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -12,18 +16,25 @@ import { connectDB } from './config/database.config';
 
 const app = express();
 
-// Middleware
+// === Security and Development Middleware ===
+/**
+ * Configure CORS to handle cross-origin requests
+ * and Helmet for security headers
+ */
 app.use(cors());
 app.use(
   helmet({
-    contentSecurityPolicy: false, // Temporarily disable CSP for troubleshooting
+    contentSecurityPolicy: false, // Disable CSP for Swagger UI compatibility
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginOpenerPolicy: { policy: "unsafe-none" }
   })
 );
 
-// Add headers specifically for Swagger UI in Safari
+/**
+ * Safari-specific headers to ensure proper functionality
+ * of Swagger UI and cross-origin resources
+ */
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -34,37 +45,49 @@ app.use((req, res, next) => {
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Initialize Swagger with specific options for Safari
+// === API Documentation Setup ===
+/**
+ * Configure and initialize Swagger UI with custom settings
+ * for API documentation and testing interface
+ */
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 app.use(
   '/api-docs',
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
-    explorer: true,
+    explorer: true, // Enable search functionality
     customSiteTitle: "Certificate Manager API Documentation",
     customCss: '.swagger-ui .topbar { display: none }',
     swaggerOptions: {
-      displayRequestDuration: true,
-      persistAuthorization: true,
-      tryItOutEnabled: true,
-      filter: true,
-      withCredentials: true
+      displayRequestDuration: true, // Show API response times
+      persistAuthorization: true,   // Maintain auth between page refreshes
+      tryItOutEnabled: true,        // Enable API testing feature
+      filter: true,                 // Enable endpoint filtering
+      withCredentials: true         // Allow sending cookies with requests
     }
   })
 );
 
-// Routes
+// === Route Configuration ===
+/**
+ * Mount the main API routes under /api endpoint
+ * Error handling middleware catches any errors thrown in routes
+ */
 app.use('/api', apiRoutes);
 
 // Error handling
 app.use(errorHandler);
 
-// Start server
+// === Server Initialization ===
 const PORT = process.env.PORT || 3443;
 
+/**
+ * Starts the server after establishing database connection
+ * Implements a graceful startup pattern
+ */
 const startServer = async () => {
   try {
-    // Connect to MongoDB first
+    // Ensure database connection before starting server
     await connectDB();
 
     app.listen(PORT, () => {
@@ -77,7 +100,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('Failed to start server:', error);
-    process.exit(1);
+    process.exit(1); // Exit with error code if server fails to start
   }
 };
 
