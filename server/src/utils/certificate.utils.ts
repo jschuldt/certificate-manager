@@ -1,53 +1,11 @@
 import https from 'https';
 import { URL } from 'url';
 import { TLSSocket } from 'tls';
-
-/**
- * Represents the subject/issuer fields in an X.509 certificate
- */
-interface CertificateSubject {
-  C?: string;  // Country
-  ST?: string; // State
-  L?: string;  // Locality
-  O?: string;  // Organization
-  OU?: string; // Organizational Unit
-  CN?: string; // Common Name
-}
-
-/**
- * Raw certificate data as returned by TLS
- */
-interface DetailedCertificate {
-  issuer: CertificateSubject;
-  subject: CertificateSubject;
-  valid_from: string;
-  valid_to: string;
-  serialNumber: string;
-  subjectaltname?: string;
-  fingerprint: string;
-  bits?: number;
-}
-
-/**
- * Normalized certificate information for application use
- */
-export interface CertificateInfo {
-  website: string;
-  issuer: string;
-  validFrom: string;
-  validTo: string;
-  issuedBy: string;
-  serialNumber: string;
-  country: string;
-  state: string;
-  locality: string;
-  organization: string;
-  organizationalUnit: string;
-  commonName: string;
-  alternativeNames: string[];
-  fingerprint: string;
-  bits: number;
-}
+import { 
+    ICertificateInfo, 
+    DetailedCertificate, 
+    CertificateSubject 
+} from '../types/certificate.types';
 
 /**
  * Fetches and parses SSL certificate information from a website
@@ -55,7 +13,7 @@ export interface CertificateInfo {
  * @returns Promise resolving to normalized certificate information
  * @throws Error if certificate cannot be retrieved or parsed
  */
-export const getCertificateInfo = (websiteUrl: string): Promise<CertificateInfo> => {
+export const getCertificateInfo = (websiteUrl: string): Promise<ICertificateInfo> => {
   return new Promise((resolve, reject) => {
     try {
       const url = new URL(websiteUrl.startsWith('https://') ? websiteUrl : `https://${websiteUrl}`);
@@ -80,7 +38,7 @@ export const getCertificateInfo = (websiteUrl: string): Promise<CertificateInfo>
         }
 
         // Safe property access with type checking
-        const certInfo: CertificateInfo = {
+        const certInfo: ICertificateInfo = {
           website: url.hostname,
           issuer: cert.issuer ? (cert.issuer.CN || 'Unknown') : 'Unknown',
           validFrom: cert.valid_from || 'Unknown',

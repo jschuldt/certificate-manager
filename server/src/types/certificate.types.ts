@@ -81,7 +81,8 @@ export interface ICertManagerInfo {
 }
 
 /**
- * Basic certificate information used for quick reference
+ * Basic certificate summary information
+ * @deprecated Use ICertificateInfo instead
  */
 export interface CertificateInfo {
     /** Entity the certificate was issued to */
@@ -92,6 +93,53 @@ export interface CertificateInfo {
     validFrom: string;
     /** End date of validity period */
     validTo: string;
+}
+
+/**
+ * Represents the subject/issuer fields in an X.509 certificate
+ */
+export interface CertificateSubject {
+    C?: string;  // Country
+    ST?: string; // State
+    L?: string;  // Locality
+    O?: string;  // Organization
+    OU?: string; // Organizational Unit
+    CN?: string; // Common Name
+}
+
+/**
+ * Raw certificate data as returned by TLS
+ */
+export interface DetailedCertificate {
+    issuer: CertificateSubject;
+    subject: CertificateSubject;
+    valid_from: string;
+    valid_to: string;
+    serialNumber: string;
+    subjectaltname?: string;
+    fingerprint: string;
+    bits?: number;
+}
+
+/**
+ * Normalized certificate information for application use
+ */
+export interface ICertificateInfo {
+    website: string;
+    issuer: string;
+    validFrom: string;
+    validTo: string;
+    issuedBy: string;
+    serialNumber: string;
+    country: string;
+    state: string;
+    locality: string;
+    organization: string;
+    organizationalUnit: string;
+    commonName: string;
+    alternativeNames: string[];
+    fingerprint: string;
+    bits: number;
 }
 
 /** Possible status values for a certificate */
