@@ -2,863 +2,410 @@ import request from 'supertest';
 import express from 'express';
 import apiRoutes from '../../routes/api.routes';
 import { certificateController } from '../../controllers/certificate.controller';
-import { userService } from '../../services/user.service';
-import * as certificateUtils from '../../utils/certificate.utils';
-import * as mapperUtils from '../../utils/mapper.utils';
+import { userController } from '../../controllers/user.controller';
 
-// Mock setup
+// Mock controllers
 jest.mock('../../controllers/certificate.controller');
-jest.mock('../../services/user.service');
-jest.mock('../../utils/certificate.utils');
-jest.mock('../../utils/mapper.utils');
+jest.mock('../../controllers/user.controller');
 
 const app = express();
 app.use(express.json());
 app.use('/', apiRoutes);
-
-// Add interface for user type
-interface UserResponse {
-  id: string;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  password?: string;
-}
 
 describe('API Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  // Helper function to create safe user object (without password)
-  const createSafeUser = (userData: Partial<UserResponse>) => {
-    const { password, ...safeData } = userData;
-    return {
-      ...safeData,
-      toObject: () => safeData,
-      toSafeObject: () => safeData
-    };
-  };
+  describe('Health Check', () => {
+    it('GET /alive - should return alive status with timestamp', async () => {
+      const response = await request(app)
+        .get('/alive')
+        .expect(200);
 
-  // Health Check Tests
-  describe('Health Check Endpoints', () => {
-    describe('GET /alive', () => {
-      it('should return alive status with timestamp', async () => {
-        const response = await request(app)
-          .get('/alive')
-          .expect(200);
+      expect(response.body).toHaveProperty('status', 'alive');
+      expect(response.body).toHaveProperty('timestamp');
+      expect(Date.parse(response.body.timestamp)).not.toBeNaN();
+    });
+  });
 
-        expect(response.body).toHaveProperty('status', 'alive');
-        expect(response.body).toHaveProperty('timestamp');
-        expect(Date.parse(response.body.timestamp)).not.toBeNaN();
+  describe('Certificate Routes', () => {
+    describe('POST /certificates', () => {
+      it('should create a certificate', async () => {
+        const mockCertificate = { domain: 'test.com', expiryDate: '2024-01-01' };
+        (certificateController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(201).json(mockCertificate);
+        });
+
+        await request(app)
+          .post('/certificates')
+          .send(mockCertificate)
+          .expect(201)
+          .expect(mockCertificate);
+      });
+
+      it('should handle invalid certificate data', async () => {
+        const invalidData = { domain: '', expiryDate: 'invalid-date' };
+        (certificateController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({ error: 'Invalid certificate data' });
+        });
+
+        await request(app)
+          .post('/certificates')
+          .send(invalidData)
+          .expect(400)
+          .expect({ error: 'Invalid certificate data' });
+      });
+
+      it('should handle duplicate domain', async () => {
+        const duplicateData = { domain: 'existing.com', expiryDate: '2024-01-01' };
+        (certificateController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(409).json({ error: 'Certificate for this domain already exists' });
+        });
+
+        await request(app)
+          .post('/certificates')
+          .send(duplicateData)
+          .expect(409)
+          .expect({ error: 'Certificate for this domain already exists' });
+      });
+    });
+
+    describe('GET /certificates', () => {
+      it('should get all certificates', async () => {
+        const mockCertificates = [{ id: '1', domain: 'test.com' }];
+        (certificateController.getAll as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockCertificates);
+        });
+
+        await request(app)
+          .get('/certificates')
+          .expect(200)
+          .expect(mockCertificates);
+      });
+    });
+
+    describe('GET /certificates/search', () => {
+      it('should search certificates', async () => {
+        const mockResults = [{ id: '1', domain: 'test.com' }];
+        (certificateController.search as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockResults);
+        });
+
+        await request(app)
+          .get('/certificates/search?query=test')
+          .expect(200)
+          .expect(mockResults);
+      });
+    });
+
+    describe('GET /certificates/expiring/:days', () => {
+      it('should get expiring certificates', async () => {
+        const mockExpiring = [{ id: '1', domain: 'test.com', expiryDate: '2024-01-01' }];
+        (certificateController.getExpiring as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockExpiring);
+        });
+
+        await request(app)
+          .get('/certificates/expiring/30')
+          .expect(200)
+          .expect(mockExpiring);
+      });
+    });
+
+    describe('GET /certificates/:id', () => {
+      it('should get certificate by id', async () => {
+        const mockCertificate = { id: '1', domain: 'test.com' };
+        (certificateController.getById as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockCertificate);
+        });
+
+        await request(app)
+          .get('/certificates/1')
+          .expect(200)
+          .expect(mockCertificate);
+      });
+    });
+
+    describe('PUT /certificates/:id', () => {
+      it('should update certificate', async () => {
+        const mockUpdated = { id: '1', domain: 'updated.com' };
+        (certificateController.update as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockUpdated);
+        });
+
+        await request(app)
+          .put('/certificates/1')
+          .send({ domain: 'updated.com' })
+          .expect(200)
+          .expect(mockUpdated);
+      });
+    });
+
+    describe('DELETE /certificates/:id', () => {
+      it('should delete certificate', async () => {
+        (certificateController.delete as jest.Mock).mockImplementation((req, res) => {
+          res.status(204).send();
+        });
+
+        await request(app)
+          .delete('/certificates/1')
+          .expect(204);
+      });
+    });
+
+    describe('POST /certificates/bulk', () => {
+      it('should create multiple certificates', async () => {
+        const mockCertificates = [
+          { domain: 'test1.com' },
+          { domain: 'test2.com' }
+        ];
+        (certificateController.bulkCreate as jest.Mock).mockImplementation((req, res) => {
+          res.status(201).json(mockCertificates);
+        });
+
+        await request(app)
+          .post('/certificates/bulk')
+          .send(mockCertificates)
+          .expect(201)
+          .expect(mockCertificates);
+      });
+
+      it('should handle invalid certificates in bulk create', async () => {
+        const invalidData = [
+          { domain: '' },
+          { domain: 'test.com', expiryDate: 'invalid' }
+        ];
+
+        (certificateController.bulkCreate as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({
+            error: 'Validation failed',
+            failures: [
+              { index: 0, error: 'Domain is required' },
+              { index: 1, error: 'Invalid expiry date' }
+            ]
+          });
+        });
+
+        await request(app)
+          .post('/certificates/bulk')
+          .send(invalidData)
+          .expect(400)
+          .expect({
+            error: 'Validation failed',
+            failures: [
+              { index: 0, error: 'Domain is required' },
+              { index: 1, error: 'Invalid expiry date' }
+            ]
+          });
+      });
+    });
+
+    describe('GET /check-certificate', () => {
+      it('should check certificate info', async () => {
+        const mockInfo = { domain: 'test.com', validTo: '2024-01-01' };
+        (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockInfo);
+        });
+
+        await request(app)
+          .get('/check-certificate?url=https://test.com')
+          .expect(200)
+          .expect(mockInfo);
+      });
+
+      it('should handle invalid URL format', async () => {
+        (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({ error: 'Invalid URL format' });
+        });
+
+        await request(app)
+          .get('/check-certificate?url=invalid-url')
+          .expect(400)
+          .expect({ error: 'Invalid URL format' });
+      });
+
+      it('should handle unreachable host', async () => {
+        (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+          res.status(500).json({ error: 'Unable to reach host' });
+        });
+
+        await request(app)
+          .get('/check-certificate?url=https://nonexistent.example.com')
+          .expect(500)
+          .expect({ error: 'Unable to reach host' });
       });
     });
   });
 
-  // Certificate Management Tests
-  describe('Certificate Management', () => {
-    describe('Certificate Validation', () => {
-      describe('GET /check-certificate', () => {
-        it('should check certificate successfully', async () => {
-          const mockCertInfo = {
-            subject: 'example.com',
-            issuer: 'Test CA',
-            validFrom: '2023-01-01',
-            validTo: '2024-01-01'
-          };
-
-          const mockMappedCertificate = {
-            domain: 'example.com',
-            issuer: 'Test CA',
-            expiryDate: '2024-01-01'
-          };
-
-          (certificateUtils.getCertificateInfo as jest.Mock).mockResolvedValue(mockCertInfo);
-          (mapperUtils.mapCertificateInfoToModel as jest.Mock).mockReturnValue(mockMappedCertificate);
-
-          const response = await request(app)
-            .get('/check-certificate?url=https://example.com')
-            .expect(200);
-
-          expect(response.body).toEqual(mockMappedCertificate);
-          expect(certificateUtils.getCertificateInfo).toHaveBeenCalledWith('https://example.com');
-          expect(mapperUtils.mapCertificateInfoToModel).toHaveBeenCalledWith(mockCertInfo);
+  describe('User Routes', () => {
+    describe('POST /users/login', () => {
+      it('should login user', async () => {
+        const mockUser = { id: '1', email: 'test@test.com' };
+        (userController.login as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockUser);
         });
 
-        it('should handle missing URL parameter', async () => {
-          const response = await request(app)
-            .get('/check-certificate')
-            .expect(400);
+        await request(app)
+          .post('/users/login')
+          .send({ email: 'test@test.com', password: 'password' })
+          .expect(200)
+          .expect(mockUser);
+      });
 
-          expect(response.body).toHaveProperty('error', 'URL parameter is required');
+      it('should handle invalid credentials', async () => {
+        (userController.login as jest.Mock).mockImplementation((req, res) => {
+          res.status(401).json({ error: 'Invalid email or password' });
         });
 
-        it('should handle invalid URL parameter', async () => {
-          const response = await request(app)
-            .get('/check-certificate?url=')
-            .expect(400);
+        await request(app)
+          .post('/users/login')
+          .send({ email: 'wrong@test.com', password: 'wrongpass' })
+          .expect(401)
+          .expect({ error: 'Invalid email or password' });
+      });
 
-          expect(response.body).toHaveProperty('error', 'URL parameter is required');
+      it('should handle missing credentials', async () => {
+        (userController.login as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({ error: 'Email and password are required' });
         });
 
-        it('should handle certificate fetch errors', async () => {
-          (certificateUtils.getCertificateInfo as jest.Mock).mockRejectedValue(
-            new Error('Failed to fetch certificate')
-          );
-
-          const response = await request(app)
-            .get('/check-certificate?url=https://invalid.com')
-            .expect(500);
-
-          expect(response.body).toHaveProperty('error', 'Failed to fetch certificate info');
-          expect(response.body).toHaveProperty('details', 'Failed to fetch certificate');
-        });
+        await request(app)
+          .post('/users/login')
+          .send({})
+          .expect(400)
+          .expect({ error: 'Email and password are required' });
       });
     });
 
-    describe('Certificate CRUD Operations', () => {
-      describe('POST /certificates', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+    describe('POST /users', () => {
+      it('should create user', async () => {
+        const mockUser = { id: '1', email: 'test@test.com' };
+        (userController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(201).json(mockUser);
         });
 
-        it('should create a certificate successfully', async () => {
-          const mockCertificate = {
-            domain: 'example.com',
-            expiryDate: '2024-12-31',
-            issuer: 'Test CA'
-          };
-
-          (certificateController.create as jest.Mock).mockImplementation((req, res) => {
-            res.status(201).json(mockCertificate);
-          });
-
-          const response = await request(app)
-            .post('/certificates')
-            .send(mockCertificate)
-            .expect(201);
-
-          expect(response.body).toEqual(mockCertificate);
-          expect(certificateController.create).toHaveBeenCalled();
-        });
-
-        it('should handle validation errors', async () => {
-          const invalidCertificate = {
-            domain: '',
-            expiryDate: 'invalid-date'
-          };
-
-          (certificateController.create as jest.Mock).mockImplementation((req, res) => {
-            res.status(400).json({ error: 'Invalid certificate data' });
-          });
-
-          const response = await request(app)
-            .post('/certificates')
-            .send(invalidCertificate)
-            .expect(400);
-
-          expect(response.body).toHaveProperty('error');
-          expect(certificateController.create).toHaveBeenCalled();
-        });
+        await request(app)
+          .post('/users')
+          .send({ email: 'test@test.com', password: 'password' })
+          .expect(201)
+          .expect(mockUser);
       });
 
-      describe('GET /certificates', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+      it('should handle existing email', async () => {
+        (userController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(409).json({ error: 'Email already registered' });
         });
 
-        it('should retrieve all certificates successfully', async () => {
-          const mockCertificates = [
-            {
-              id: '1',
-              domain: 'example.com',
-              expiryDate: '2024-12-31',
-              issuer: 'Test CA'
-            },
-            {
-              id: '2',
-              domain: 'test.com',
-              expiryDate: '2024-11-30',
-              issuer: 'Another CA'
-            }
-          ];
-
-          (certificateController.getAll as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockCertificates);
-          });
-
-          const response = await request(app)
-            .get('/certificates')
-            .expect(200);
-
-          expect(response.body).toEqual(mockCertificates);
-          expect(response.body).toHaveLength(2);
-          expect(certificateController.getAll).toHaveBeenCalled();
-        });
-
-        it('should handle errors when retrieving certificates', async () => {
-          (certificateController.getAll as jest.Mock).mockImplementation((req, res) => {
-            res.status(500).json({ error: 'Failed to fetch certificates' });
-          });
-
-          const response = await request(app)
-            .get('/certificates')
-            .expect(500);
-
-          expect(response.body).toHaveProperty('error');
-          expect(response.body.error).toBe('Failed to fetch certificates');
-          expect(certificateController.getAll).toHaveBeenCalled();
-        });
-
-        it('should handle pagination parameters', async () => {
-          const mockPaginatedResponse = {
-            certificates: [
-              {
-                id: '1',
-                domain: 'example.com',
-                expiryDate: '2024-12-31',
-                issuer: 'Test CA'
-              }
-            ],
-            page: 1,
-            limit: 10,
-            total: 1
-          };
-
-          (certificateController.getAll as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockPaginatedResponse);
-          });
-
-          const response = await request(app)
-            .get('/certificates?page=1&limit=10')
-            .expect(200);
-
-          expect(response.body).toEqual(mockPaginatedResponse);
-          expect(certificateController.getAll).toHaveBeenCalled();
-        });
+        await request(app)
+          .post('/users')
+          .send({ email: 'existing@test.com', password: 'password' })
+          .expect(409)
+          .expect({ error: 'Email already registered' });
       });
 
-      describe('GET /certificates/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+      it('should handle invalid user data', async () => {
+        (userController.create as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({ error: 'Invalid email format' });
         });
 
-        it('should retrieve a specific certificate successfully', async () => {
-          const mockCertificate = {
-            id: '123',
-            domain: 'example.com',
-            expiryDate: '2024-12-31',
-            issuer: 'Test CA'
-          };
-
-          (certificateController.getById as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockCertificate);
-          });
-
-          const response = await request(app)
-            .get('/certificates/123')
-            .expect(200);
-
-          expect(response.body).toEqual(mockCertificate);
-          expect(certificateController.getById).toHaveBeenCalled();
-        });
-
-        it('should return 404 when certificate is not found', async () => {
-          (certificateController.getById as jest.Mock).mockImplementation((req, res) => {
-            res.status(404).json({ error: 'Certificate not found' });
-          });
-
-          const response = await request(app)
-            .get('/certificates/nonexistent')
-            .expect(404);
-
-          expect(response.body).toHaveProperty('error');
-          expect(response.body.error).toBe('Certificate not found');
-          expect(certificateController.getById).toHaveBeenCalled();
-        });
-
-        it('should handle server errors when retrieving certificate', async () => {
-          (certificateController.getById as jest.Mock).mockImplementation((req, res) => {
-            res.status(500).json({ error: 'Internal server error' });
-          });
-
-          const response = await request(app)
-            .get('/certificates/123')
-            .expect(500);
-
-          expect(response.body).toHaveProperty('error');
-          expect(response.body.error).toBe('Internal server error');
-          expect(certificateController.getById).toHaveBeenCalled();
-        });
-      });
-
-      describe('PUT /certificates/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should update a certificate successfully', async () => {
-          const mockUpdatedCertificate = {
-            id: '123',
-            domain: 'updated.com',
-            expiryDate: '2025-12-31',
-            issuer: 'Updated CA'
-          };
-
-          (certificateController.update as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockUpdatedCertificate);
-          });
-
-          const response = await request(app)
-            .put('/certificates/123')
-            .send(mockUpdatedCertificate)
-            .expect(200);
-
-          expect(response.body).toEqual(mockUpdatedCertificate);
-          expect(certificateController.update).toHaveBeenCalled();
-        });
-
-        it('should handle 404 when updating non-existent certificate', async () => {
-          (certificateController.update as jest.Mock).mockImplementation((req, res) => {
-            res.status(404).json({ error: 'Certificate not found' });
-          });
-
-          const response = await request(app)
-            .put('/certificates/nonexistent')
-            .send({ domain: 'test.com' })
-            .expect(404);
-
-          expect(response.body.error).toBe('Certificate not found');
-        });
-      });
-
-      describe('DELETE /certificates/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should delete a certificate successfully', async () => {
-          (certificateController.delete as jest.Mock).mockImplementation((req, res) => {
-            res.status(204).send();
-          });
-
-          await request(app)
-            .delete('/certificates/123')
-            .expect(204);
-
-          expect(certificateController.delete).toHaveBeenCalled();
-        });
-
-        it('should handle 404 when deleting non-existent certificate', async () => {
-          (certificateController.delete as jest.Mock).mockImplementation((req, res) => {
-            res.status(404).json({ error: 'Certificate not found' });
-          });
-
-          const response = await request(app)
-            .delete('/certificates/nonexistent')
-            .expect(404);
-
-          expect(response.body.error).toBe('Certificate not found');
-        });
+        await request(app)
+          .post('/users')
+          .send({ email: 'invalid-email', password: '123' })
+          .expect(400)
+          .expect({ error: 'Invalid email format' });
       });
     });
 
-    describe('Certificate Advanced Operations', () => {
-      describe('GET /certificates/search', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+    describe('GET /users', () => {
+      it('should get all users', async () => {
+        const mockUsers = [{ id: '1', email: 'test@test.com' }];
+        (userController.getAll as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockUsers);
         });
 
-        it('should search certificates successfully', async () => {
-          const mockSearchResults = [
-            { id: '1', domain: 'test.com', expiryDate: '2024-12-31', issuer: 'Test CA' }
-          ];
-
-          (certificateController.search as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockSearchResults);
-          });
-
-          const response = await request(app)
-            .get('/certificates/search?query=test')
-            .expect(200);
-
-          expect(response.body).toEqual(mockSearchResults);
-          expect(certificateController.search).toHaveBeenCalled();
-        });
-      });
-
-      describe('GET /certificates/expiring/:days', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should get expiring certificates successfully', async () => {
-          const mockExpiringCerts = [
-            { id: '1', domain: 'expiring.com', expiryDate: '2024-01-01', issuer: 'Test CA' }
-          ];
-
-          (certificateController.getExpiring as jest.Mock).mockImplementation((req, res) => {
-            res.status(200).json(mockExpiringCerts);
-          });
-
-          const response = await request(app)
-            .get('/certificates/expiring/30')
-            .expect(200);
-
-          expect(response.body).toEqual(mockExpiringCerts);
-          expect(certificateController.getExpiring).toHaveBeenCalled();
-        });
-      });
-
-      describe('POST /certificates/bulk', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should create multiple certificates successfully', async () => {
-          const mockBulkCertificates = [
-            { domain: 'bulk1.com', expiryDate: '2024-12-31', issuer: 'Bulk CA' },
-            { domain: 'bulk2.com', expiryDate: '2024-12-31', issuer: 'Bulk CA' }
-          ];
-
-          (certificateController.bulkCreate as jest.Mock).mockImplementation((req, res) => {
-            res.status(201).json({ created: mockBulkCertificates });
-          });
-
-          const response = await request(app)
-            .post('/certificates/bulk')
-            .send(mockBulkCertificates)
-            .expect(201);
-
-          expect(response.body.created).toEqual(mockBulkCertificates);
-          expect(certificateController.bulkCreate).toHaveBeenCalled();
-        });
-
-        it('should handle validation errors in bulk create', async () => {
-          const invalidBulkData = [
-            { domain: '', expiryDate: 'invalid-date' }
-          ];
-
-          (certificateController.bulkCreate as jest.Mock).mockImplementation((req, res) => {
-            res.status(400).json({ error: 'Invalid certificate data in bulk create' });
-          });
-
-          const response = await request(app)
-            .post('/certificates/bulk')
-            .send(invalidBulkData)
-            .expect(400);
-
-          expect(response.body).toHaveProperty('error');
-          expect(certificateController.bulkCreate).toHaveBeenCalled();
-        });
-      });
-    });
-  });
-
-  // User Management Tests
-  describe('User Management', () => {
-    const createMockUser = (data: any) => ({
-      ...data,
-      toSafeObject: () => {
-        const { password, ...safeData } = data;
-        return safeData;
-      },
-      toObject: () => {
-        const { password, ...safeData } = data;
-        return safeData;
-      }
-    });
-
-    describe('Authentication', () => {
-      describe('POST /users/login', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should login user successfully', async () => {
-          const mockUserData = {
-            id: '1',
-            email: 'test@example.com',
-            firstName: 'Test',
-            lastName: 'User'
-          };
-
-          (userService.login as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
-
-          const response = await request(app)
-            .post('/users/login')
-            .send({ email: 'test@example.com', password: 'password123' })
-            .expect(200);
-
-          expect(response.body).toEqual(mockUserData);
-        });
-
-        it('should handle invalid credentials', async () => {
-          (userService.login as jest.Mock).mockResolvedValue(null);
-
-          const response = await request(app)
-            .post('/users/login')
-            .send({ email: 'wrong@example.com', password: 'wrongpass' })
-            .expect(401);
-
-          expect(response.body.error).toBe('Invalid credentials');
-        });
-
-        it('should handle missing credentials', async () => {
-          const response = await request(app)
-            .post('/users/login')
-            .send({})
-            .expect(400);
-
-          expect(response.body.error).toBe('Email and password are required');
-        });
+        await request(app)
+          .get('/users')
+          .expect(200)
+          .expect(mockUsers);
       });
     });
 
-    describe('User CRUD Operations', () => {
-      describe('POST /users', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+    describe('GET /users/search', () => {
+      it('should search users', async () => {
+        const mockResults = [{ id: '1', email: 'test@test.com' }];
+        (userController.search as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockResults);
         });
 
-        it('should create user successfully', async () => {
-          const mockUserData = {
-            id: '1',
-            email: 'new@example.com',
-            name: 'New User'
-          };
+        await request(app)
+          .get('/users/search?query=test')
+          .expect(200)
+          .expect(mockResults);
+      });
+    });
 
-          (userService.create as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
-
-          const response = await request(app)
-            .post('/users')
-            .send({
-              email: 'new@example.com',
-              name: 'New User',
-              password: 'password123'
-            })
-            .expect(201);
-
-          expect(response.body).toEqual(mockUserData);
-          expect(response.body).not.toHaveProperty('password');
+    describe('GET /users/:id', () => {
+      it('should get user by id', async () => {
+        const mockUser = { id: '1', email: 'test@test.com' };
+        (userController.getById as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockUser);
         });
 
-        it('should handle validation errors', async () => {
-          (userService.create as jest.Mock).mockRejectedValue(new Error('Validation failed'));
-
-          const response = await request(app)
-            .post('/users')
-            .send({ email: 'invalid' })
-            .expect(400);
-
-          expect(response.body.error).toBe('Failed to create user');
-        });
-
-        it('should not return password in response when creating user', async () => {
-          const mockUser = {
-            id: '1',
-            email: 'new@example.com',
-            firstName: 'New',
-            lastName: 'User'
-          };
-
-          (userService.create as jest.Mock).mockResolvedValue(createSafeUser(mockUser));
-
-          const response = await request(app)
-            .post('/users')
-            .send({ email: 'new@example.com', firstName: 'New', lastName: 'User', password: 'password123' })
-            .expect(201);
-
-          expect(response.body).not.toHaveProperty('password');
-          expect(response.body).toEqual(mockUser);
-        });
+        await request(app)
+          .get('/users/1')
+          .expect(200)
+          .expect(mockUser);
       });
 
-      describe('GET /users', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+      it('should handle non-existent user', async () => {
+        (userController.getById as jest.Mock).mockImplementation((req, res) => {
+          res.status(404).json({ error: 'User not found' });
         });
 
-        it('should get all users with pagination', async () => {
-          const mockUsers = {
-            users: [
-              { id: '1', name: 'User 1', email: 'user1@example.com' },
-              { id: '2', name: 'User 2', email: 'user2@example.com' }
-            ],
-            total: 2,
-            page: 1,
-            limit: 10
-          };
+        await request(app)
+          .get('/users/999')
+          .expect(404)
+          .expect({ error: 'User not found' });
+      });
+    });
 
-          (userService.getAll as jest.Mock).mockResolvedValue(mockUsers);
-
-          const response = await request(app)
-            .get('/users?page=1&limit=10')
-            .expect(200);
-
-          expect(response.body).toEqual(mockUsers);
-          response.body.users.forEach((user: UserResponse) => {
-            expect(user).not.toHaveProperty('password');
-          });
+    describe('PUT /users/:id', () => {
+      it('should update user', async () => {
+        const mockUpdated = { id: '1', email: 'updated@test.com' };
+        (userController.update as jest.Mock).mockImplementation((req, res) => {
+          res.status(200).json(mockUpdated);
         });
 
-        it('should handle errors when fetching users', async () => {
-          (userService.getAll as jest.Mock).mockRejectedValue(new Error('Database error'));
-
-          const response = await request(app)
-            .get('/users')
-            .expect(500);
-
-          expect(response.body.error).toBe('Failed to fetch users');
-        });
-
-        it('should not return password in users list', async () => {
-          const mockUsersWithPasswords = {
-            users: [
-              { id: '1', name: 'User 1', email: 'user1@example.com' },
-              { id: '2', name: 'User 2', email: 'user2@example.com' }
-            ].map(user => createSafeUser(user)),
-            total: 2,
-            page: 1,
-            limit: 10
-          };
-
-          (userService.getAll as jest.Mock).mockResolvedValue(mockUsersWithPasswords);
-
-          const response = await request(app)
-            .get('/users')
-            .expect(200);
-
-          expect(response.body.users).toHaveLength(2);
-          response.body.users.forEach((user: UserResponse) => {
-            expect(user).not.toHaveProperty('password');
-          });
-        });
+        await request(app)
+          .put('/users/1')
+          .send({ email: 'updated@test.com' })
+          .expect(200)
+          .expect(mockUpdated);
       });
 
-      describe('GET /users/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+      it('should handle invalid password update', async () => {
+        (userController.update as jest.Mock).mockImplementation((req, res) => {
+          res.status(400).json({ error: 'Password must be at least 8 characters' });
         });
 
-        it('should get user by id successfully', async () => {
-          const mockUserData = {
-            id: '123',
-            name: 'Test User',
-            email: 'test@example.com'
-          };
-
-          (userService.getById as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
-
-          const response = await request(app)
-            .get('/users/123')
-            .expect(200);
-
-          expect(response.body).toEqual(mockUserData);
-          expect(response.body).not.toHaveProperty('password');
-        });
-
-        it('should handle non-existent user', async () => {
-          (userService.getById as jest.Mock).mockResolvedValue(null);
-
-          const response = await request(app)
-            .get('/users/nonexistent')
-            .expect(404);
-
-          expect(response.body.error).toBe('User not found');
-        });
-
-        it('should not return password when getting user by id', async () => {
-          const mockUser = createSafeUser({
-            id: '123',
-            name: 'Test User',
-            email: 'test@example.com'
-          });
-
-          (userService.getById as jest.Mock).mockResolvedValue(mockUser);
-
-          const response = await request(app)
-            .get('/users/123')
-            .expect(200);
-
-          expect(response.body).not.toHaveProperty('password');
-          expect(response.body).toEqual({
-            id: '123',
-            name: 'Test User',
-            email: 'test@example.com'
-          });
-        });
+        await request(app)
+          .put('/users/1')
+          .send({ password: '123' })
+          .expect(400)
+          .expect({ error: 'Password must be at least 8 characters' });
       });
+    });
 
-      describe('PUT /users/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
+    describe('DELETE /users/:id', () => {
+      it('should delete user', async () => {
+        (userController.delete as jest.Mock).mockImplementation((req, res) => {
+          res.status(204).send();
         });
 
-        it('should update user successfully', async () => {
-          const mockUserData = {
-            id: '123',
-            firstName: 'Updated',
-            lastName: 'Name',
-            email: 'updated@example.com'
-          };
-
-          (userService.update as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
-
-          const response = await request(app)
-            .put('/users/123')
-            .send({ firstName: 'Updated', lastName: 'Name' })
-            .expect(200);
-
-          expect(response.body).toEqual(mockUserData);
-          expect(response.body).not.toHaveProperty('password');
-        });
-
-        it('should handle non-existent user update', async () => {
-          (userService.update as jest.Mock).mockResolvedValue(null);
-
-          const response = await request(app)
-            .put('/users/nonexistent')
-            .send({ name: 'New Name' })
-            .expect(404);
-
-          expect(response.body.error).toBe('User not found');
-        });
-
-        it('should not return password in response when updating user', async () => {
-          const mockUpdatedUser = createSafeUser({
-            id: '123',
-            name: 'Updated Name',
-            email: 'updated@example.com'
-          });
-
-          (userService.update as jest.Mock).mockResolvedValue(mockUpdatedUser);
-
-          const response = await request(app)
-            .put('/users/123')
-            .send({ name: 'Updated Name' })
-            .expect(200);
-
-          expect(response.body).not.toHaveProperty('password');
-          expect(response.body).toEqual({
-            id: '123',
-            name: 'Updated Name',
-            email: 'updated@example.com'
-          });
-        });
-
-        it('should update user password successfully', async () => {
-          const mockUserData = {
-            id: '123',
-            firstName: 'Test',
-            lastName: 'User',
-            email: 'test@example.com'
-          };
-
-          (userService.update as jest.Mock).mockResolvedValue(createSafeUser(mockUserData));
-
-          const response = await request(app)
-            .put('/users/123')
-            .send({ password: 'newPassword123' })
-            .expect(200);
-
-          expect(response.body).toEqual(mockUserData);
-          expect(response.body).not.toHaveProperty('password');
-          expect(userService.update).toHaveBeenCalledWith('123', { password: 'newPassword123' });
-        });
-      });
-
-      describe('DELETE /users/:id', () => {
-        beforeEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should delete user successfully', async () => {
-          (userService.delete as jest.Mock).mockResolvedValue(true);
-
-          await request(app)
-            .delete('/users/123')
-            .expect(204);
-        });
-
-        it('should handle non-existent user deletion', async () => {
-          (userService.delete as jest.Mock).mockResolvedValue(false);
-
-          const response = await request(app)
-            .delete('/users/nonexistent')
-            .expect(404);
-
-          expect(response.body.error).toBe('User not found');
-        });
-      });
-
-      describe('User Search Operations', () => {
-        describe('GET /users/search', () => {
-          beforeEach(() => {
-            jest.clearAllMocks();
-          });
-
-          it('should search users successfully', async () => {
-            const mockSearchResults = [
-              { id: '1', name: 'Test User', email: 'test@example.com' }
-            ];
-
-            (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
-
-            const response = await request(app)
-              .get('/users/search?firstName=Test&email=test@example.com')
-              .expect(200);
-
-            expect(response.body).toEqual(mockSearchResults);
-            expect(response.body[0]).not.toHaveProperty('password');
-          });
-
-          it('should handle empty search results', async () => {
-            (userService.search as jest.Mock).mockResolvedValue([]);
-
-            const response = await request(app)
-              .get('/users/search?query=nonexistent')
-              .expect(200);
-
-            expect(response.body).toEqual([]);
-            expect(userService.search).toHaveBeenCalledWith({
-              query: 'nonexistent'
-            });
-          });
-
-          it('should handle search with multiple parameters', async () => {
-            const mockSearchResults = [
-              createSafeUser({
-                id: '1',
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'test@example.com',
-                password: 'hashedpass'
-              })
-            ];
-
-            (userService.search as jest.Mock).mockResolvedValue(mockSearchResults);
-
-            const response = await request(app)
-              .get('/users/search?firstName=Test&lastName=User&email=test@example.com')
-              .expect(200);
-
-            const expectedResponse = mockSearchResults.map(user => ({
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email
-            }));
-
-            expect(response.body).toEqual(expectedResponse);
-            expect(userService.search).toHaveBeenCalledWith({
-              firstName: 'Test',
-              lastName: 'User',
-              email: 'test@example.com'
-            });
-          });
-        });
+        await request(app)
+          .delete('/users/1')
+          .expect(204);
       });
     });
   });

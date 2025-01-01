@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { certificateService } from '../services/certificate.service';
 import { validateCertificateInput, isValidMongoId } from '../utils/validation.utils';
+import { getCertificateInfo } from '../utils/certificate.utils';
+import { mapCertificateInfoToModel } from '../utils/mapper.utils';
 
 const transformRequestToSchema = (body: any) => {
   const {
@@ -30,6 +32,15 @@ const transformRequestToSchema = (body: any) => {
   };
 };
 
+const isValidUrl = (urlString: string): boolean => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === 'https:' || url.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
 export const certificateController = {
   async create(req: Request, res: Response) {
     try {
@@ -52,7 +63,7 @@ export const certificateController = {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
-      
+
       const result = await certificateService.getAllCertificates(page, limit);
       res.json(result);
     } catch (error) {
@@ -148,9 +159,38 @@ export const certificateController = {
       });
     } catch (error) {
       console.error('Bulk create error:', error); // Add error logging
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to create certificates',
         details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  },
+
+  async checkCertificate(req: Request, res: Response) {
+    try {
+      const { url } = req.query;
+
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ error: 'URL parameter is required' });
+      }
+
+      // Validate and format URL
+      if (!isValidUrl(url)) {
+        return res.status(400).json({ error: 'Invalid URL format. Must be a valid HTTP/HTTPS URL' });
+      }
+
+      // Ensure URL starts with https:// or http://
+      const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+
+      const certInfo = await getCertificateInfo(formattedUrl);
+      const mappedCertificate = mapCertificateInfoToModel(certInfo);
+      res.json(mappedCertificate);
+    } catch (error: unknown) {
+      console.error('Certificate check error:', error); // Add logging
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      res.status(500).json({
+        error: 'Failed to fetch certificate info',
+        details: errorMessage
       });
     }
   }
