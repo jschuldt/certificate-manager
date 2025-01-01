@@ -38,6 +38,13 @@ export interface ICertManagerInfo {
   comments?: string;
 }
 
+export interface CertificateInfo {
+  subject: string;
+  issuer: string;
+  validFrom: string;
+  validTo: string;
+}
+
 export type CertificateStatus = 'VALID' | 'EXPIRED' | 'EXPIRING_SOON' | 'REVOKED';
 
 export interface ICertificateFilter {

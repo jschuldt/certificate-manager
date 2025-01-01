@@ -1,12 +1,5 @@
 import { jest } from '@jest/globals';
-
-// Add interface for certificate info
-interface CertificateInfo {
-    subject: string;
-    issuer: string;
-    validFrom: string;
-    validTo: string;
-}
+import { CertificateInfo } from '../types/certificate.types';
 
 // Mock certificate utils with synchronous responses
 jest.mock('../utils/certificate.utils', () => ({
