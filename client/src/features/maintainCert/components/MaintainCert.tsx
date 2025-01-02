@@ -82,6 +82,7 @@ export const CertificateSearch: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPullingCert, setIsPullingCert] = useState(false); // Add new state for pull cert loading
+  const [websiteError, setWebsiteError] = useState<string>(''); // Add new state for validation
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ ...searchParams, [field]: event.target.value });
@@ -220,12 +221,49 @@ export const CertificateSearch: React.FC = () => {
     }
   };
 
+  // Add validation function
+  const validateWebsite = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.protocol !== 'https:') {
+        setWebsiteError('Website must use HTTPS protocol');
+        return false;
+      }
+      setWebsiteError('');
+      return true;
+    } catch (err) {
+      setWebsiteError('Please enter a valid website URL');
+      return false;
+    }
+  };
+
+  // Update handleChange for website validation
+  const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setFormData({ ...formData, [field]: value });
+    
+    // Validate website field on change
+    if (field === 'website') {
+      if (value.trim() === '') {
+        setWebsiteError('Website is required');
+      } else {
+        validateWebsite(value);
+      }
+    }
+  };
+
+  // Update handleSubmit to include validation
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required website field
     if (!formData.website.trim()) {
-      setError('Website is required');
+      setWebsiteError('Website is required');
+      return;
+    }
+
+    // Validate website format
+    if (!validateWebsite(formData.website)) {
       return;
     }
 
@@ -256,8 +294,44 @@ export const CertificateSearch: React.FC = () => {
     }
   };
 
-  const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [field]: event.target.value });
+  const handlePullCertData = async () => {
+    const certificateId = selectedCertificate?._id || selectedCertificate?.id;
+  
+    if (!certificateId) {
+      setError('No certificate ID found');
+      return;
+    }
+  
+    if (!formData.website.trim()) {
+      setWebsiteError('Website is required');
+      return;
+    }
+
+    if (!validateWebsite(formData.website)) {
+      return;
+    }
+  
+    setIsPullingCert(true);
+    setError(null);
+  
+    try {
+      const updatedCert = await refreshCertificate(certificateId, formData.website);
+      
+      // Update the selected certificate and search results with new data
+      setSelectedCertificate(updatedCert);
+      setSearchResults(prevResults => 
+        prevResults.map(cert => 
+          (cert._id || cert.id) === certificateId ? updatedCert : cert
+        )
+      );
+      
+      setError('Certificate data refreshed successfully');
+    } catch (err) {
+      console.error('Certificate refresh failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
+    } finally {
+      setIsPullingCert(false);
+    }
   };
 
   const handleDateChange = (field: string) => (date: Date | null) => {
@@ -522,42 +596,6 @@ export const CertificateSearch: React.FC = () => {
     setRenewDialogOpen(false);
   };
 
-  const handlePullCertData = async () => {
-    const certificateId = selectedCertificate?._id || selectedCertificate?.id;
-  
-    if (!certificateId) {
-      setError('No certificate ID found');
-      return;
-    }
-  
-    if (!formData.website) {
-      setError('Website is required to pull certificate data');
-      return;
-    }
-  
-    setIsPullingCert(true);
-    setError(null);
-  
-    try {
-      const updatedCert = await refreshCertificate(certificateId, formData.website);
-      
-      // Update the selected certificate and search results with new data
-      setSelectedCertificate(updatedCert);
-      setSearchResults(prevResults => 
-        prevResults.map(cert => 
-          (cert._id || cert.id) === certificateId ? updatedCert : cert
-        )
-      );
-      
-      setError('Certificate data refreshed successfully');
-    } catch (err) {
-      console.error('Certificate refresh failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
-    } finally {
-      setIsPullingCert(false);
-    }
-  };
-
   const handleDeleteCertificate = () => {
     console.log('Opening delete dialog for certificate:', {
       id: selectedCertificate?.id,
@@ -792,7 +830,15 @@ export const CertificateSearch: React.FC = () => {
                           label="Website"
                           value={formData.website}
                           onChange={handleChange('website')}
+                          error={!!websiteError}
+                          helperText={websiteError}
                           size="small"  // Made input field smaller
+                          placeholder="https://example.com"
+                          sx={{
+                            '& .MuiFormHelperText-root': {
+                              color: theme => websiteError ? theme.palette.error.main : 'inherit'
+                            }
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12}>
