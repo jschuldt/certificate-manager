@@ -19,7 +19,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { searchCertificates, updateCertificate, deleteCertificate } from '../../../services/api/certificate.services';
+import { searchCertificates, updateCertificate, deleteCertificate, refreshCertificate } from '../../../services/api/certificate.services';
 import { Certificate, SearchResponse } from '../../../types/index.types';
 import { parseISO, format } from 'date-fns';
 import { format as formatTz, utcToZonedTime } from 'date-fns-tz'; // Add date-fns-tz import
@@ -81,6 +81,7 @@ export const CertificateSearch: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPullingCert, setIsPullingCert] = useState(false); // Add new state for pull cert loading
 
   const handleSearchChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchParams({ ...searchParams, [field]: event.target.value });
@@ -522,8 +523,39 @@ export const CertificateSearch: React.FC = () => {
   };
 
   const handlePullCertData = async () => {
-    // TODO: Implement pull certificate data
-    console.log('Pulling certificate data:', selectedCertificate?.id);
+    const certificateId = selectedCertificate?._id || selectedCertificate?.id;
+  
+    if (!certificateId) {
+      setError('No certificate ID found');
+      return;
+    }
+  
+    if (!formData.website) {
+      setError('Website is required to pull certificate data');
+      return;
+    }
+  
+    setIsPullingCert(true);
+    setError(null);
+  
+    try {
+      const updatedCert = await refreshCertificate(certificateId, formData.website);
+      
+      // Update the selected certificate and search results with new data
+      setSelectedCertificate(updatedCert);
+      setSearchResults(prevResults => 
+        prevResults.map(cert => 
+          (cert._id || cert.id) === certificateId ? updatedCert : cert
+        )
+      );
+      
+      setError('Certificate data refreshed successfully');
+    } catch (err) {
+      console.error('Certificate refresh failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
+    } finally {
+      setIsPullingCert(false);
+    }
   };
 
   const handleDeleteCertificate = () => {
@@ -833,8 +865,10 @@ export const CertificateSearch: React.FC = () => {
                               color="primary"
                               fullWidth
                               onClick={handlePullCertData}
+                              disabled={isPullingCert || !formData.website}
+                              startIcon={isPullingCert ? <CircularProgress size={20} /> : null}
                             >
-                              Pull Cert Data
+                              {isPullingCert ? 'Pulling...' : 'Pull Cert Data'}
                             </Button>
                             <Button
                               variant="contained"

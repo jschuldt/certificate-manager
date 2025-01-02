@@ -279,3 +279,10 @@ export const createCertificate = async (data: CreateCertificateData) => {
     throw error;
   }
 };
+
+export const refreshCertificate = async (id: string, website: string): Promise<Certificate> => {
+  const response = await api.post(`/api/certificates/${id}/refresh`, null, {
+    params: { website: website }
+  });
+  return response.data;
+};
