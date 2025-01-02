@@ -11,12 +11,13 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
-import { createCertificate, updateCertificate, deleteCertificate } from '../../../services/api/certificate.services';
+import { createCertificate, updateCertificate, deleteCertificate, refreshCertificate } from '../../../services/api/certificate.services';
 import { CreateCertFormData, CreateCertificateDetails } from '../../../types/index.types';
 
 export const CreateCertificate: React.FC = () => {
@@ -53,6 +54,8 @@ export const CreateCertificate: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [websiteError, setWebsiteError] = useState<string>('');
+  const [isPullingCert, setIsPullingCert] = useState(false);
 
   const handleDialogClose = () => {
     setOpenDialog(false);
@@ -65,8 +68,37 @@ export const CreateCertificate: React.FC = () => {
     setOpenDialog(true);
   };
 
+  const validateWebsite = (url: string): boolean => {
+    if (!url.trim()) {
+      setWebsiteError('Website is required');
+      return false;
+    }
+    
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.protocol !== 'https:') {
+        setWebsiteError('Website must use HTTPS protocol');
+        return false;
+      }
+      setWebsiteError('');
+      return true;
+    } catch (err) {
+      setWebsiteError('Please enter a valid website URL');
+      return false;
+    }
+  };
+
   const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [field]: event.target.value });
+    const value = event.target.value;
+    setFormData({ ...formData, [field]: value });
+    
+    if (field === 'website') {
+      if (value.trim() === '') {
+        setWebsiteError('Website is required');
+      } else {
+        validateWebsite(value);
+      }
+    }
   };
 
   const handleDateChange = (field: string) => (date: Date | null) => {
@@ -79,6 +111,10 @@ export const CreateCertificate: React.FC = () => {
     e.preventDefault();
     setSaveError(null);
     setSaveSuccess(false);
+
+    if (!validateWebsite(formData.website)) {
+      return;
+    }
 
     try {
       const certificateData = {
@@ -149,6 +185,64 @@ export const CreateCertificate: React.FC = () => {
     window.location.reload();
   };
 
+  const transformCertificateData = (data: any): CreateCertificateDetails => {
+    return {
+      name: data.name || '',
+      issuer: data.issuer || '',
+      validFrom: data.validFrom ? new Date(data.validFrom) : new Date(),
+      validTo: data.validTo ? new Date(data.validTo) : new Date(),
+      serialNumber: data.serialNumber || '',
+      subject: data.subject || '',
+      organization: data.organization || '',
+      organizationalUnit: data.organizationalUnit || '',
+      certLastQueried: data.certLastQueried ? new Date(data.certLastQueried).toISOString() : null,
+      metadata: {
+        country: data.metadata?.country || '',
+        state: data.metadata?.state || '',
+        locality: data.metadata?.locality || '',
+        alternativeNames: data.metadata?.alternativeNames || [],
+        fingerprint: data.metadata?.fingerprint || '',
+        bits: data.metadata?.bits || null
+      }
+    };
+  };
+
+  const handlePullCertData = async () => {
+    if (!certificateId) {
+      setSaveError('No certificate ID found');
+      return;
+    }
+    
+    if (!formData.website.trim()) {
+      setWebsiteError('Website is required');
+      return;
+    }
+
+    if (!validateWebsite(formData.website)) {
+      return;
+    }
+    
+    setIsPullingCert(true);
+    setSaveError(null);
+  
+    try {
+      const updatedCert = await refreshCertificate(certificateId, formData.website);
+      setCertificateDetails(prevDetails => ({
+        ...prevDetails,
+        ...transformCertificateData(updatedCert)
+      }));
+      setDialogMessage('Certificate data refreshed successfully');
+      setOpenDialog(true);
+    } catch (err) {
+      console.error('Certificate refresh failed:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
+      setDialogMessage(err instanceof Error ? err.message : 'Failed to refresh certificate data');
+      setOpenDialog(true);
+    } finally {
+      setIsPullingCert(false);
+    }
+  };
+
   return (
     <Box sx={{ ml: -25, mt: 2 }}>
       <Paper sx={{ p: 3, mb: 2, mr: 8 }}>
@@ -177,6 +271,14 @@ export const CreateCertificate: React.FC = () => {
                     label="Website"
                     value={formData.website}
                     onChange={handleChange('website')}
+                    error={!!websiteError}
+                    helperText={websiteError}
+                    placeholder="https://example.com"
+                    sx={{
+                      '& .MuiFormHelperText-root': {
+                        color: theme => websiteError ? theme.palette.error.main : 'inherit'
+                      }
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -258,9 +360,11 @@ export const CreateCertificate: React.FC = () => {
                             variant="contained"
                             color="primary"
                             fullWidth
-                            onClick={() => showComingSoonDialog('Pull Certificate Data')}
+                            onClick={handlePullCertData}
+                            disabled={isPullingCert || !formData.website}
+                            startIcon={isPullingCert ? <CircularProgress size={20} color="inherit" /> : null}
                           >
-                            Pull Cert Data
+                            {isPullingCert ? 'Pulling...' : 'Pull Cert Data'}
                           </Button>
                           <Button
                             variant="contained"
