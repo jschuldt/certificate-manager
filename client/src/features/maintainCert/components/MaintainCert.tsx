@@ -394,156 +394,151 @@ export const CertificateSearch: React.FC = () => {
   };
 
   const renderCertificateFields = (certificate: Certificate) => {
-    // Reset all fields explicitly
-    const fields: CertificateField[] = [
-      { label: 'Name', value: certificate.name || '', type: 'text' },
-      { label: 'Issuer', value: certificate.issuer || '', type: 'text' },
-      { label: 'Valid From', value: certificate.validFrom || null, type: 'date' },
-      { label: 'Valid To', value: certificate.validTo || null, type: 'date' },
-      { label: 'Serial Number', value: certificate.serialNumber || '', type: 'text' },
-      { label: 'Subject', value: certificate.subject || '', type: 'text' },
-      { label: 'Organization', value: certificate.organization || '', type: 'text' },
-      { label: 'Organizational Unit', value: certificate.organizationalUnit || '', type: 'text' },
-      { label: 'Last Queried', value: certificate.certLastQueried || null, type: 'date' }
-    ];
-
-    // Add metadata fields if they exist
-    if (certificate.metadata) {
-      fields.push(
-        { label: 'Country', value: certificate.metadata.country || '', type: 'text' },
-        { label: 'State', value: certificate.metadata.state || '', type: 'text' },
-        { label: 'Locality', value: certificate.metadata.locality || '', type: 'text' },
-        { label: 'Fingerprint', value: certificate.metadata.fingerprint || '', type: 'text' },
-        { label: 'Bits', value: certificate.metadata.bits || null, type: 'number' }
-      );
-    }
-
     return (
       <Box 
         key={`cert-fields-${certificate._id || certificate.id}`} 
-        sx={{ 
+        sx={{
           width: '100%',
           p: 0.25,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1.25  // Increased from 1 to 2 (equivalent to 16px)
+          gap: 1.25
         }}
       >
-        {fields.map((field, index) => (
-          <Box 
-            key={`${field.label}-${index}`}
-            sx={{ 
-              minHeight: '32px',  // Standardize height for all fields
-              width: '100%'
-            }}
-          >
-            {field.type === 'date' ? (
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DateTimePicker
-                  key={`${field.label}-${certificate._id || certificate.id}`}
-                  label={field.label}
-                  value={field.value ? safeParseDate(field.value as string) : null}
-                  disabled
-                  onChange={() => {}}
-                  renderInput={(params: TextFieldProps) => (
-                    <TextField 
-                      {...params} 
-                      fullWidth 
-                      disabled 
-                      variant="outlined"
-                      size="small"
-                      sx={{ 
-                        height: '32px',  // Match text field height
-                        backgroundColor: '#f5f5f5',
-                        '& .MuiOutlinedInput-root': {
-                          height: '32px',
-                          backgroundColor: '#f5f5f5'
-                        },
-                        '& .MuiInputLabel-root': {
-                          fontSize: '0.8rem',
-                          lineHeight: '1',
-                          '&.Mui-focused, &.MuiFormLabel-filled': {
-                            transform: 'translate(14px, -9px) scale(0.75)'
-                          }
-                        },
-                        '& .MuiOutlinedInput-input': {
-                          fontSize: '0.8rem',
-                          padding: '6px 8px',
-                          height: '18px'  // Adjust input height
-                        }
-                      }}
-                    />
-                  )}
-                  inputFormat="MM/dd/yyyy"
-                  ampm={false}
-                  views={['year', 'month', 'day']}
-                />
-              </LocalizationProvider>
-            ) : (
-              <TextField
-                key={`${field.label}-${certificate._id || certificate.id}`}
-                fullWidth
-                label={field.label}
-                value={field.value || ''}
-                disabled
-                type={field.type}
-                variant="outlined"
-                size="small"
-                sx={{ 
-                  height: '32px',  // Fixed height
-                  backgroundColor: '#f5f5f5',
-                  '& .MuiOutlinedInput-root': {
-                    height: '32px',
-                    backgroundColor: '#f5f5f5'
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontSize: '0.8rem',
-                    lineHeight: '1',
-                    '&.Mui-focused, &.MuiFormLabel-filled': {
-                      transform: 'translate(14px, -9px) scale(0.75)'
-                    }
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    fontSize: '0.8rem',
-                    padding: '6px 8px'
-                  }
-                }}
-              />
-            )}
-          </Box>
-        ))}
-        
-        {/* Alternative Names section */}
-        {certificate.metadata?.alternativeNames && 
-         certificate.metadata.alternativeNames.length > 0 && (
-          <Box 
-            key={`alt-names-${certificate._id || certificate.id}`}
-            sx={{ mt: 0.5, mb: 0.75 }}  // Reduced margins
-          >
+        {/* Core Details Section */}
+        <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Core Details</Typography>
+        <TextField
+          fullWidth
+          label="Name"
+          value={certificate.name || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Issuer"
+          value={certificate.issuer || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Valid From"
+          value={certificate.validFrom ? format(new Date(certificate.validFrom), 'MM/dd/yyyy') : ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Valid To"
+          value={certificate.validTo ? format(new Date(certificate.validTo), 'MM/dd/yyyy') : ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+
+        {/* Certificate Details Section */}
+        <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Certificate Details</Typography>
+        <TextField
+          fullWidth
+          label="Serial Number"
+          value={certificate.serialNumber || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Subject"
+          value={certificate.subject || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Organization"
+          value={certificate.organization || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+        <TextField
+          fullWidth
+          label="Organizational Unit"
+          value={certificate.organizationalUnit || ''}
+          disabled
+          size="small"
+          sx={{ backgroundColor: '#f5f5f5' }}
+        />
+
+        {/* Additional Information Section */}
+        <Typography variant="subtitle2" sx={{ mb: 1, mt: 2 }}>Additional Information</Typography>
+        {certificate.metadata && (
+          <>
+            <TextField
+              fullWidth
+              label="Country"
+              value={certificate.metadata.country || ''}
+              disabled
+              size="small"
+              sx={{ backgroundColor: '#f5f5f5' }}
+            />
+            <TextField
+              fullWidth
+              label="State"
+              value={certificate.metadata.state || ''}
+              disabled
+              size="small"
+              sx={{ backgroundColor: '#f5f5f5' }}
+            />
+            <TextField
+              fullWidth
+              label="Locality"
+              value={certificate.metadata.locality || ''}
+              disabled
+              size="small"
+              sx={{ backgroundColor: '#f5f5f5' }}
+            />
             <TextField
               fullWidth
               label="Alternative Names"
-              value={certificate.metadata.alternativeNames.join(', ')}
+              value={certificate.metadata.alternativeNames?.join(', ') || ''}
               disabled
               multiline
               size="small"
-              rows={2}  // Reduced rows
-              variant="outlined"
-              sx={{ 
-                backgroundColor: '#f5f5f5',
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: '#f5f5f5'
-                },
-                '& .MuiInputLabel-root': {
-                  fontSize: '0.8rem'  // Smaller font for label
-                },
-                '& .MuiOutlinedInput-input': {
-                  fontSize: '0.8rem',  // Smaller font for input
-                  py: 0.75  // Reduced vertical padding
-                }
-              }}
+              sx={{ backgroundColor: '#f5f5f5' }}
             />
-          </Box>
+            <TextField
+              fullWidth
+              label="Fingerprint"
+              value={certificate.metadata.fingerprint || ''}
+              disabled
+              size="small"
+              sx={{ backgroundColor: '#f5f5f5' }}
+            />
+            <TextField
+              fullWidth
+              label="Bits"
+              value={certificate.metadata.bits || ''}
+              disabled
+              size="small"
+              sx={{ backgroundColor: '#f5f5f5' }}
+            />
+          </>
+        )}
+        {certificate.certLastQueried && (
+          <TextField
+            fullWidth
+            label="Last Queried"
+            value={format(new Date(certificate.certLastQueried), 'MM/dd/yyyy HH:mm:ss')}
+            disabled
+            size="small"
+            sx={{ backgroundColor: '#f5f5f5' }}
+          />
         )}
       </Box>
     );
