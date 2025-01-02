@@ -20,8 +20,8 @@ export const Sidebar = () => {
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Create Cert', icon: <AddCircleOutlineIcon />, path: '/create' },
     { text: 'Maintain Cert', icon: <InventoryIcon />, path: '/inventory' },
-    { text: 'Pull Cert', icon: <SearchIcon />, path: '/query' },
     { text: 'Query Cert', icon: <SearchIcon />, path: '/search' },
+    { text: 'Get Cert Issuer Info', icon: <SearchIcon />, path: '/query' },
     { text: 'Admin', icon: <AdminPanelSettingsIcon />, path: '/admin' },
     { text: 'About', icon: <InfoIcon />, path: '/about' },
   ];
