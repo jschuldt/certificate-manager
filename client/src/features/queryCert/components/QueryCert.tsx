@@ -95,7 +95,7 @@ export const QueryCert: React.FC = () => {
 
     try {
       const searchParams: CertificateSearchParams = {
-        page: page + 1, // API uses 1-based pagination
+        page: page + 1,
         limit: rowsPerPage,
       };
 
@@ -103,27 +103,10 @@ export const QueryCert: React.FC = () => {
         searchParams[searchField as keyof Pick<CertificateSearchParams, 'name' | 'issuer' | 'website' | 'organization' | 'responsiblePerson'>] = searchValue;
       }
 
-      // Enhanced debug logging
-      console.log('🔍 Search Request Details:', {
-        apiUrl: process.env.REACT_APP_API_URL,
-        endpoint: '/api/certificates/search',
-        fullUrl: `${process.env.REACT_APP_API_URL}/api/certificates/search`,
-        params: searchParams,
-        environment: {
-          NODE_ENV: process.env.NODE_ENV,
-          REACT_APP_API_URL: process.env.REACT_APP_API_URL
-        }
-      });
-
       const response = await searchCertificates(searchParams);
       setCertificates(response.certificates);
       setTotalRecords(response.total);
     } catch (err) {
-      console.error('❌ Search Error:', {
-        error: err,
-        message: err instanceof Error ? err.message : 'Unknown error',
-        stack: err instanceof Error ? err.stack : undefined
-      });
       setError(err instanceof Error ? err.message : 'An error occurred while searching');
       setCertificates([]);
     } finally {
