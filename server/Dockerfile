@@ -1,40 +1,17 @@
-# Build stage
-FROM node:16 AS builder
+FROM node:22.11-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Install necessary build tools
+RUN apk add --no-cache python3 make g++
+
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install all dependencies, including dev dependencies
-RUN npm install
-
-# Copy source
+# Copy source code
 COPY . .
-
-# Build the application
-RUN npm run build
-
-# Production stage
-FROM node:16-slim
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install only production dependencies and rebuild bcrypt
-RUN apt-get update && \
-    apt-get install -y python3 make g++ && \
-    npm install --only=production && \
-    npm rebuild bcrypt --build-from-source && \
-    apt-get remove -y python3 make g++ && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy built assets from builder stage
-COPY --from=builder /app/dist ./dist
 
 EXPOSE 3443
 
-CMD ["node", "dist/index.js"]
+# Container will start with npm install followed by npm start
+CMD ["sh", "-c", "npm install && npm start"]

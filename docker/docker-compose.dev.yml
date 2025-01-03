@@ -27,17 +27,14 @@ services:
     build:
       context: ../server
       dockerfile: Dockerfile
-      target: builder  # Use the builder stage for development
     ports:
       - "3443:3443"
     volumes:
       - ../server:/app
-      - server_modules:/app/node_modules
     environment:
       - NODE_ENV=development
       - DOCKER=true
-      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager  # Use container name
-    command: npm run dev  # Override CMD to run in dev mode
+      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager
     depends_on:
       mongodb:
         condition: service_healthy
@@ -51,6 +48,11 @@ services:
       - ../database/data:/data/db
     networks:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -66,5 +68,3 @@ networks:
 
 volumes:
   server_node_modules:
-  server_modules:
-    driver: local
