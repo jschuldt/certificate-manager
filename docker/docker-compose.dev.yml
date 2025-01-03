@@ -24,17 +24,20 @@ services:
       - frontend
 
   server:
-    image: certificate-manager/server:latest
     build:
       context: ../server
       dockerfile: Dockerfile
+      target: builder  # Use the builder stage for development
     ports:
       - "3443:3443"
     volumes:
       - ../server:/app
-      - /app/node_modules
+      - server_modules:/app/node_modules
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager
+      - NODE_ENV=development
+      - DOCKER=true
+      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager  # Use container name
+    command: npm run dev  # Override CMD to run in dev mode
     depends_on:
       mongodb:
         condition: service_healthy
@@ -60,3 +63,8 @@ networks:
     driver: bridge
   backend:
     driver: bridge
+
+volumes:
+  server_node_modules:
+  server_modules:
+    driver: local

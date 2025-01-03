@@ -7,12 +7,12 @@ import { config } from './environment.config';
  */
 export const connectDB = async (): Promise<void> => {
   try {
-    // Attempt to connect to MongoDB using the URI from environment config
-    await mongoose.connect(config.mongoUri);
-    console.log('MongoDB connected successfully');
+    // Use mongodb.uri instead of mongoUri
+    await mongoose.connect(config.mongodb.uri);
+    console.log('✅ MongoDB Connected');
   } catch (error) {
     // Log error and exit if connection fails
     console.error('MongoDB connection error:', error);
-    process.exit(1);
+    throw error;
   }
 };

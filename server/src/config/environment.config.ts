@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
 
+// Check if running in Docker container
+const isDocker = process.env.DOCKER === 'true';
+
 /**
  * Application configuration object
  * Provides centralized access to environment variables with defaults
@@ -14,9 +17,14 @@ export const config = {
   // Node environment (development/production/test)
   nodeEnv: process.env.NODE_ENV || 'development',
   
-  // MongoDB connection string
-  mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/certificate-manager',
-  
   // JWT secret for authentication
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key'
+  jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+  
+  // MongoDB connection configuration
+  mongodb: {
+    // Use container name in Docker, localhost otherwise
+    uri: process.env.MONGODB_URI || (isDocker 
+      ? 'mongodb://mongodb:27017/certificate-manager'
+      : 'mongodb://localhost:27017/certificate-manager')
+  }
 };
