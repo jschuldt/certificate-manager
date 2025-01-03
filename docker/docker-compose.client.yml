@@ -1,4 +1,9 @@
-version: '3.8'
+# Usage:
+# Build and start: docker-compose -f docker-compose.client.yml up --build
+# Start: docker-compose -f docker-compose.client.yml up
+# Start in background: docker-compose -f docker-compose.client.yml up -d
+# Stop: docker-compose -f docker-compose.client.yml down
+# Rebuild: docker-compose -f docker-compose.client.yml build client
 
 services:
   client:

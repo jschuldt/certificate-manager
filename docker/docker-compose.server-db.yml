@@ -1,4 +1,10 @@
-version: '3.8'
+# How to use:
+# Build:        docker compose -f docker-compose.server-db.yml build
+# Start:        docker compose -f docker-compose.server-db.yml up
+# Stop:         docker compose -f docker-compose.server-db.yml down
+# Rebuild:      docker compose -f docker-compose.server-db.yml up --build
+# Background:   docker compose -f docker-compose.server-db.yml up -d
+# View logs:    docker compose -f docker-compose.server-db.yml logs -f
 
 services:
   server:
@@ -13,7 +19,8 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/certificate-manager
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
   mongodb:
     image: mongo:latest
@@ -21,3 +28,9 @@ services:
       - "27017:27017"
     volumes:
       - ../database/data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

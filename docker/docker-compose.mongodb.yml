@@ -1,4 +1,8 @@
-version: '3.8'
+# Usage:
+# Start MongoDB: docker-compose -f docker-compose.mongodb.yml up
+# Start in background: docker-compose -f docker-compose.mongodb.yml up -d
+# Stop: docker-compose -f docker-compose.mongodb.yml down
+# Remove data volume: docker-compose -f docker-compose.mongodb.yml down --volumes
 
 services:
   mongodb:

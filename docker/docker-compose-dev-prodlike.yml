@@ -1,0 +1,62 @@
+# How to use:
+# Build:        docker compose build
+# Start:        docker compose up
+# Stop:         docker compose down
+# Rebuild:      docker compose up --build
+# Background:   docker compose up -d
+# View logs:    docker compose logs -f
+# Normal configuration will only allow back-end services to connect to the DB no the host
+
+services:
+  client:
+    image: certificate-manager/client:latest
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../client:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:3443/api
+    networks:
+      - frontend
+
+  server:
+    image: certificate-manager/server:latest
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    ports:
+      - "3443:3443"
+    volumes:
+      - ../server:/app
+      - /app/node_modules
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - ../database/data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
