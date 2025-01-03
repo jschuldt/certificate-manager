@@ -65,7 +65,7 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
       console.log('Original URL:', url);
     }
 
-    const response = await api.get('/api/check-certificate', {
+    const response = await api.get('/check-certificate', {
       params: { url: normalizedUrl }
     });
 
@@ -127,27 +127,44 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
 
 export const searchCertificates = async (params: CertificateSearchParams): Promise<SearchResponse> => {
   try {
-    console.log('Attempting to search certificates with params:', params);
-    // Update the endpoint to match the swagger docs
+    if (isDevelopment) {
+      console.log('🔍 Search Request:', {
+        url: `${baseURL}/api/certificates/search`,
+        params,
+        headers: api.defaults.headers
+      });
+    }
+
     const response = await api.get('/api/certificates/search', {
       params,
-      // Add timeout and better error handling
       timeout: 5000,
     });
-    console.log('Search response:', response.data);
+
+    if (isDevelopment) {
+      console.log('✅ Search Response:', {
+        status: response.status,
+        data: response.data,
+        headers: response.headers
+      });
+    }
+
     return response.data;
   } catch (error) {
-    console.error('Certificate search error:', {
-      error,
-      status: axios.isAxiosError(error) ? error.response?.status : 'unknown',
-      message: axios.isAxiosError(error) ? error.message : 'Unknown error',
-      url: '/api/certificates/search',
-      params
-    });
+    if (isDevelopment) {
+      console.error('❌ Search Error Details:', {
+        error,
+        config: (error as AxiosError)?.config,
+        baseURL: baseURL,
+        fullUrl: `${baseURL}/api/certificates/search`,
+        status: (error as AxiosError)?.response?.status,
+        data: (error as AxiosError)?.response?.data,
+        message: (error as AxiosError)?.message
+      });
+    }
 
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 404) {
-        throw new Error('Certificate search endpoint not found. Please check API configuration.');
+        throw new Error(`Certificate search endpoint not found (404). Full URL: ${baseURL}/api/certificates/search`);
       }
       throw new Error(error.response?.data?.message || 'Failed to search certificates');
     }

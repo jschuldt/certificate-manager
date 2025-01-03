@@ -19,7 +19,7 @@ services:
       - ../client:/app
       - /app/node_modules
     environment:
-      - REACT_APP_API_URL=http://localhost:3443/api
+      - REACT_APP_API_URL=http://localhost:3443
     networks:
       - frontend
 

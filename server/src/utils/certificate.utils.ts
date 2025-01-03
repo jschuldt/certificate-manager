@@ -34,7 +34,7 @@ export const getCertificateInfo = (websiteUrl: string): Promise<ICertificateInfo
 
         // Add debug logging
         if (process.env.NODE_ENV === 'development') {
-          console.log('Certificate data:', JSON.stringify(cert, null, 2));
+          console.log('Certificate data:', JSON.stringify(sanitizeCertificateForLogging(cert), null, 2));
         }
 
         // Safe property access with type checking
@@ -74,4 +74,23 @@ export const getCertificateInfo = (websiteUrl: string): Promise<ICertificateInfo
       reject(error instanceof Error ? error : new Error('Unknown error occurred'));
     }
   });
+};
+
+// Add this helper function to sanitize certificate data
+const sanitizeCertificateForLogging = (cert: any) => {
+  if (!cert) return null;
+  
+  // Create a new object with only the properties we want to log
+  return {
+    subject: cert.subject,
+    issuer: cert.issuer,
+    valid_from: cert.valid_from,
+    valid_to: cert.valid_to,
+    serialNumber: cert.serialNumber,
+    raw: cert.raw?.toString('hex').slice(0, 32) + '...', // Only log part of raw data
+    fingerprint: cert.fingerprint,
+    fingerprint256: cert.fingerprint256,
+    // Add any other relevant properties, but avoid circular references
+    // Don't include issuerCertificate as it creates circular reference
+  };
 };

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
-export const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3443';
+// Remove trailing /api if it exists in the environment variable
+export const baseURL = (process.env.REACT_APP_API_URL || 'http://localhost:3443').replace(/\/api$/, '');
 
 export const api = axios.create({
   baseURL,
