@@ -1,4 +1,4 @@
-import { api } from './config.services';
+import { api, isDevelopment, baseURL } from './config.services';
 import {
   ApiResponse,
   Certificate,
@@ -11,17 +11,13 @@ import {
 } from '../../types/index.types';
 import axios, { AxiosError } from 'axios';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const checkNetworkStatus = async () => {
   if (!navigator.onLine) {
     throw new Error('No internet connection available');
   }
 
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3443';
-
   if (isDevelopment) {
-    console.log('🔍 Checking server availability at:', apiUrl);
+    console.log('🔍 Checking server availability at:', baseURL);
     console.log('Environment variables:', {
       NODE_ENV: process.env.NODE_ENV,
       REACT_APP_API_URL: process.env.REACT_APP_API_URL
@@ -29,7 +25,7 @@ const checkNetworkStatus = async () => {
   }
 
   try {
-    const testResponse = await fetch(apiUrl, {
+    const testResponse = await fetch(baseURL, {
       method: 'HEAD',
       mode: 'no-cors'
     });
@@ -42,10 +38,10 @@ const checkNetworkStatus = async () => {
       console.error('🔍 Server test failed:', {
         error,
         message: error instanceof Error ? error.message : 'Unknown error',
-        apiUrl
+        apiUrl: baseURL
       });
     }
-    throw new Error(`Cannot reach the server at ${apiUrl}. Please check if the server is running.`);
+    throw new Error(`Cannot reach the server at ${baseURL}. Please check if the server is running.`);
   }
 };
 
@@ -58,27 +54,6 @@ const normalizeUrl = (url: string): string => {
     throw new Error('Invalid URL format');
   }
 };
-
-// Add request interceptor for debugging
-api.interceptors.request.use(
-  (config) => {
-    if (isDevelopment) {
-      console.log('🔍 API Request:', {
-        url: config.url,
-        method: config.method,
-        params: config.params,
-        headers: config.headers
-      });
-    }
-    return config;
-  },
-  (error) => {
-    if (isDevelopment) {
-      console.error('🔍 Request Error:', error);
-    }
-    return Promise.reject(error);
-  }
-);
 
 export const checkCertificate = async (url: string): Promise<ApiResponse<CertificateResponse>> => {
   try {
