@@ -12,6 +12,8 @@ import {
   DialogContentText,
   DialogActions,
   CircularProgress,
+  Alert,
+  AlertColor,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -19,6 +21,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TextFieldProps } from '@mui/material';
 import { createCertificate, updateCertificate, deleteCertificate, refreshCertificate } from '../../../services/api/certificate.services';
 import { CreateCertFormData, CreateCertificateDetails } from '../../../types/index.types';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 export const CreateCertificate: React.FC = () => {
   const [formData, setFormData] = useState<CreateCertFormData>({
@@ -56,6 +59,8 @@ export const CreateCertificate: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [websiteError, setWebsiteError] = useState<string>('');
   const [isPullingCert, setIsPullingCert] = useState(false);
+  const [alertType, setAlertType] = useState<AlertColor>('error');
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const handleDialogClose = () => {
     setOpenDialog(false);
@@ -107,6 +112,15 @@ export const CreateCertificate: React.FC = () => {
     }
   };
 
+  const showMessage = (message: string, type: AlertColor = 'error') => {
+    setAlertMessage(message);
+    setAlertType(type);
+    // Optionally clear the message after a delay
+    setTimeout(() => {
+      setAlertMessage(null);
+    }, 5000);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
@@ -130,21 +144,16 @@ export const CreateCertificate: React.FC = () => {
       if (certificateId) {
         // Update existing certificate
         await updateCertificate(certificateId, certificateData.certManager);
+        showMessage('Certificate updated successfully!', 'success');
       } else {
         // Create new certificate
         response = await createCertificate(certificateData);
         setCertificateId(response._id);
+        showMessage('Certificate created successfully!', 'success');
       }
-
-      setSaveSuccess(true);
-      // Show success message
-      setDialogMessage(certificateId ? 'Certificate updated successfully!' : 'Certificate created successfully!');
-      setOpenDialog(true);
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'An error occurred while saving');
-      // Show error message
-      setDialogMessage(error instanceof Error ? error.message : 'Failed to save certificate');
-      setOpenDialog(true);
+      console.error('Save failed:', error);
+      showMessage(error instanceof Error ? error.message : 'Failed to save certificate', 'error');
     }
   };
 
@@ -166,13 +175,10 @@ export const CreateCertificate: React.FC = () => {
       });
       setCertificateId(null);
       setDeleteDialogOpen(false);
-      setDialogMessage('Certificate deleted successfully!');
-      setOpenDialog(true);
+      showMessage('Certificate deleted successfully!', 'success');
     } catch (error) {
       setDeleteDialogOpen(false);
-      setSaveError(error instanceof Error ? error.message : 'Failed to delete certificate');
-      setDialogMessage(error instanceof Error ? error.message : 'Failed to delete certificate');
-      setOpenDialog(true);
+      showMessage(error instanceof Error ? error.message : 'Failed to delete certificate', 'error');
     }
   };
 
@@ -209,7 +215,7 @@ export const CreateCertificate: React.FC = () => {
 
   const handlePullCertData = async () => {
     if (!certificateId) {
-      setSaveError('No certificate ID found');
+      showMessage('No certificate ID found', 'error');
       return;
     }
     
@@ -231,13 +237,10 @@ export const CreateCertificate: React.FC = () => {
         ...prevDetails,
         ...transformCertificateData(updatedCert)
       }));
-      setDialogMessage('Certificate data refreshed successfully');
-      setOpenDialog(true);
+      showMessage('Certificate data refreshed successfully', 'success');
     } catch (err) {
       console.error('Certificate refresh failed:', err);
-      setSaveError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
-      setDialogMessage(err instanceof Error ? err.message : 'Failed to refresh certificate data');
-      setOpenDialog(true);
+      showMessage(err instanceof Error ? err.message : 'Failed to refresh certificate data', 'error');
     } finally {
       setIsPullingCert(false);
     }
@@ -250,6 +253,18 @@ export const CreateCertificate: React.FC = () => {
           {certificateId ? 'Edit Certificate' : 'Create Certificate'}
         </Typography>
       </Paper>
+
+      {alertMessage && (
+        <Alert 
+          severity={alertType}
+          sx={{ mb: 2, mr: 8 }}
+          iconMapping={{
+            success: <CheckCircleOutlineIcon fontSize="inherit" />
+          }}
+        >
+          {alertMessage}
+        </Alert>
+      )}
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>

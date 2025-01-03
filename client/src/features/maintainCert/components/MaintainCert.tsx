@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  AlertColor, // Add this import
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -26,6 +27,7 @@ import { format as formatTz, utcToZonedTime } from 'date-fns-tz'; // Add date-fn
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import { CertificateField } from '../../../types/index.types';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'; // Add this import
 
 export const CertificateSearch: React.FC = () => {
   // Add new state for navigation
@@ -76,6 +78,7 @@ export const CertificateSearch: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<AlertColor>('error');
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
   const [renewDialogOpen, setRenewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -256,20 +259,17 @@ export const CertificateSearch: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate required website field
     if (!formData.website.trim()) {
       setWebsiteError('Website is required');
       return;
     }
 
-    // Validate website format
     if (!validateWebsite(formData.website)) {
       return;
     }
 
-    // Check if we have a certificate to update
     if (!selectedCertificate?._id) {
-      setError('No certificate selected for update');
+      showMessage('No certificate selected for update', 'error');
       return;
     }
 
@@ -284,14 +284,18 @@ export const CertificateSearch: React.FC = () => {
         comments: formData.comments.trim()
       });
 
-      // Show success message
-      setError('Certificate updated successfully');
+      showMessage('Certificate updated successfully', 'success');
     } catch (err) {
       console.error('Update failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update certificate');
+      showMessage(err instanceof Error ? err.message : 'Failed to update certificate', 'error');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const showMessage = (message: string, type: AlertColor = 'error') => {
+    setError(message);
+    setAlertType(type);
   };
 
   const handlePullCertData = async () => {
@@ -325,10 +329,10 @@ export const CertificateSearch: React.FC = () => {
         )
       );
       
-      setError('Certificate data refreshed successfully');
+      showMessage('Certificate data refreshed successfully', 'success');
     } catch (err) {
       console.error('Certificate refresh failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh certificate data');
+      showMessage(err instanceof Error ? err.message : 'Failed to refresh certificate data', 'error');
     } finally {
       setIsPullingCert(false);
     }
@@ -615,7 +619,7 @@ export const CertificateSearch: React.FC = () => {
         id: selectedCertificate?.id,
         certificate: selectedCertificate
       });
-      setError('No certificate ID found for deletion');
+      showMessage('No certificate ID found for deletion', 'error');
       setDeleteDialogOpen(false);
       return;
     }
@@ -642,10 +646,10 @@ export const CertificateSearch: React.FC = () => {
       setSelectedCertificate(null);
       
       // Show success message
-      setError('Certificate successfully deleted');
+      showMessage('Certificate successfully deleted', 'success');
     } catch (err) {
       console.error('Delete failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete certificate');
+      showMessage(err instanceof Error ? err.message : 'Failed to delete certificate', 'error');
       setDeleteDialogOpen(false);
     } finally {
       setIsDeleting(false);
@@ -719,7 +723,13 @@ export const CertificateSearch: React.FC = () => {
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 1 }}>  {/* Reduced margin */}
+        <Alert 
+          severity={alertType}
+          sx={{ mb: 1 }}
+          iconMapping={{
+            success: <CheckCircleOutlineIcon fontSize="inherit" />
+          }}
+        >
           {error}
         </Alert>
       )}
