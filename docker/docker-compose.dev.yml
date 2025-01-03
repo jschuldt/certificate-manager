@@ -29,8 +29,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3443:3443"
-    volumes:
-      - ../server:/app
     environment:
       - NODE_ENV=development
       - DOCKER=true
