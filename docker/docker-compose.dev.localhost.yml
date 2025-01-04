@@ -1,0 +1,59 @@
+# How to use:
+# Build:        docker compose build
+# Start:        docker compose up
+# Stop:         docker compose down
+# Rebuild:      docker compose up --build
+# Background:   docker compose up -d
+# View logs:    docker compose logs -f
+# Local configuration allows all services to be accessed via localhost
+
+services:
+  client:
+    image: certificate-manager/client:latest
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../client:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:3443
+
+  server:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    ports:
+      - "3443:3443"
+    environment:
+      - NODE_ENV=development
+      - DOCKER=true
+      - MONGODB_URI=mongodb://mongodb:27017/certificate-manager
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  server_node_modules:
+  mongo-data:
+    driver: local
