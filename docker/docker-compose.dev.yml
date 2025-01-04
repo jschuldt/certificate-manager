@@ -43,7 +43,7 @@ services:
   mongodb:
     image: mongo:latest
     volumes:
-      - ../database/data:/data/db
+      - mongo-data:/data/db
     networks:
       - backend
     logging:
@@ -52,7 +52,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -66,3 +66,5 @@ networks:
 
 volumes:
   server_node_modules:
+  mongo-data:
+    driver: local
