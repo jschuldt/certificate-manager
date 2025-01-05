@@ -5,7 +5,6 @@ import {
   CertificateResponse,
   CertificateSearchParams,
   SearchResponse,
-  CertManager,
   CertificateUpdateParams,
   CreateCertificateData
 } from '../../types/index.types';
