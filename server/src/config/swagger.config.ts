@@ -13,7 +13,7 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API for managing SSL certificates'
     },
-    
+
     // API server configuration
     servers: [
       {
@@ -29,9 +29,6 @@ const swaggerOptions = {
         get: apiDocs.paths['/alive'].get
       },
       // Certificate management endpoints
-      '/check-certificate': {
-        ...apiDocs.paths.checkCertificate
-      },
       '/certificates': {
         ...apiDocs.paths.certificates
       },
@@ -49,6 +46,9 @@ const swaggerOptions = {
       },
       '/certificates/{id}/refresh': {
         ...apiDocs.paths.certificateRefresh
+      },
+      '/certificates/pull': {
+        ...apiDocs.paths.pullCertificate
       },
       // Add user paths
       '/users': {

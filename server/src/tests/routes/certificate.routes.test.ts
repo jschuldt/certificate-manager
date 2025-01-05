@@ -95,12 +95,12 @@ describe('Certificate Routes', () => {
          */
         describe('POST /:id/refresh', () => {
             it('should refresh certificate information', async () => {
-                const mockUpdatedCert = { 
-                    id: '1', 
+                const mockUpdatedCert = {
+                    id: '1',
                     domain: 'test.com',
                     certLastQueried: new Date().toISOString()
                 };
-                
+
                 (certificateController.refreshCertificate as jest.Mock).mockImplementation((req, res) => {
                     res.status(200).json(mockUpdatedCert);
                 });
@@ -249,6 +249,46 @@ describe('Certificate Routes', () => {
                     .get('/expiring/-1')
                     .expect(400)
                     .expect({ message: 'Invalid days parameter' });
+            });
+        });
+
+        /**
+         * Certificate pull endpoint tests
+         * Tests real-time certificate checking functionality
+         */
+        describe('GET /pull', () => {
+            it('should pull certificate information', async () => {
+                const mockInfo = { domain: 'test.com', validTo: '2024-01-01' };
+                (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(200).json(mockInfo);
+                });
+
+                await request(app)
+                    .get('/pull?url=https://test.com')
+                    .expect(200)
+                    .expect(mockInfo);
+            });
+
+            it('should handle invalid URL', async () => {
+                (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(400).json({ message: 'Invalid URL format' });
+                });
+
+                await request(app)
+                    .get('/pull?url=invalid-url')
+                    .expect(400)
+                    .expect({ message: 'Invalid URL format' });
+            });
+
+            it('should handle unreachable domain', async () => {
+                (certificateController.checkCertificate as jest.Mock).mockImplementation((req, res) => {
+                    res.status(503).json({ message: 'Unable to reach domain' });
+                });
+
+                await request(app)
+                    .get('/pull?url=https://nonexistent.domain')
+                    .expect(503)
+                    .expect({ message: 'Unable to reach domain' });
             });
         });
     });

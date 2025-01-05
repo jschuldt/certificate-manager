@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import certificateRoutes from './certificate.routes';
 import userRoutes from './user.routes';
-import { certificateController } from '../controllers/certificate.controller';
 
 /**
  * Main router configuration for the certificate manager API
@@ -17,13 +16,6 @@ const router = Router();
 router.get('/alive', (req, res) => {
     res.json({ status: 'alive', timestamp: new Date().toISOString() });
 });
-
-/**
- * @route GET /check-certificate
- * @description Endpoint to verify certificate validity
- * @access Public
- */
-router.get('/check-certificate', certificateController.checkCertificate);
 
 /**
  * Mount sub-routers
