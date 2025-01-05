@@ -1,21 +1,21 @@
 import request from 'supertest';
 import express from 'express';
-import indexRoutes from '../../routes/index.routes';
+import systemRoutes from '../../routes/system.routes';
 
 const app = express();
 app.use(express.json());
-app.use('/', indexRoutes);
+app.use('/', systemRoutes);
 
 /**
- * Test suite for core application endpoints
+ * Test suite for system-related endpoints
  */
-describe('Index Routes', () => {
+describe('System Routes', () => {
     describe('GET Endpoints', () => {
         /**
          * Health check endpoint tests
          * Verifies application status reporting
          */
-        describe('GET /alive', () => {
+        describe('GET /system/alive', () => {
             it('should return health status', async () => {
                 const response = await request(app)
                     .get('/alive')

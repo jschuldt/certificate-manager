@@ -1,4 +1,6 @@
 import { apiDocs } from '../docs/api.docs';
+import { userDocs } from '../docs/user.docs';
+import { systemDocs } from '../docs/system.docs';
 
 /**
  * Swagger/OpenAPI configuration object
@@ -22,13 +24,9 @@ const swaggerOptions = {
       }
     ],
 
-    // API endpoint definitions
+    // API endpoint definitions - reordered for desired display order
     paths: {
-      // Health check endpoint
-      '/alive': {  // Changed from '/' to '/alive'
-        get: apiDocs.paths['/alive'].get
-      },
-      // Certificate management endpoints
+      // Certificate endpoints first
       '/certificates': {
         ...apiDocs.paths.certificates
       },
@@ -50,19 +48,10 @@ const swaggerOptions = {
       '/certificates/pull': {
         ...apiDocs.paths.pullCertificate
       },
-      // Add user paths
-      '/users': {
-        ...apiDocs.paths['/users']
-      },
-      '/users/{id}': {
-        ...apiDocs.paths['/users/{id}']
-      },
-      '/users/search': {
-        ...apiDocs.paths['/users/search']
-      },
-      '/users/login': {
-        ...apiDocs.paths['/users/login']
-      }
+      // User endpoints second
+      ...userDocs,
+      // System endpoints last
+      ...systemDocs,
     },
 
     // Shared components (schemas, responses, etc.)
