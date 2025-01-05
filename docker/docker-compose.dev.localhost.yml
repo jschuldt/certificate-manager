@@ -1,6 +1,6 @@
 # How to use:
 # Build:        docker compose build
-# Start:        docker compose up
+# Start:        docker compose -f <fileman> up
 # Stop:         docker compose down
 # Rebuild:      docker compose up --build
 # Background:   docker compose up -d
