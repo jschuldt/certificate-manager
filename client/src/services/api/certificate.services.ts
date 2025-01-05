@@ -65,7 +65,7 @@ export const checkCertificate = async (url: string): Promise<ApiResponse<Certifi
       console.log('Original URL:', url);
     }
 
-    const response = await api.get('/check-certificate', {
+    const response = await api.get('/api/certificates/pull', {
       params: { url: normalizedUrl }
     });
 
