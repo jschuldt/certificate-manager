@@ -52,6 +52,12 @@ const swaggerOptions = {
       ...userDocs,
       // System endpoints last
       ...systemDocs,
+      '/system/alive': {
+        ...systemDocs['/system/alive']
+      },
+      '/system/email': {
+        ...systemDocs['/system/email']
+      }
     },
 
     // Shared components (schemas, responses, etc.)
@@ -60,6 +66,22 @@ const swaggerOptions = {
         ...apiDocs.components.schemas,
         // Remove or update any User schema references here
         // Use UserResponse instead
+        EmailRequest: {
+          type: 'object',
+          required: ['to', 'subject', 'message'],
+          properties: {
+            to: {
+              type: 'string',
+              format: 'email'
+            },
+            subject: {
+              type: 'string'
+            },
+            message: {
+              type: 'string'
+            }
+          }
+        }
       }
     }
   },

@@ -51,3 +51,44 @@ export interface IErrorResponse {
 
 /** Application environment type */
 export type Environment = 'development' | 'production' | 'test';
+
+export type SmtpService = 'GMAIL' | 'OUTLOOK' | 'HOTMAIL' | 'YAHOO' | 'CUSTOM';
+
+export interface ISmtpConfig {
+    service: SmtpService;
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+        user: string;
+        pass: string;
+    };
+    fromAddress: string;
+    replyTo?: string;
+    tls?: {
+        rejectUnauthorized: boolean;
+    };
+    maxRetries?: number;
+    timeout?: number;
+    isDefault?: boolean;
+    lastTested?: Date;
+    testResult?: {
+        success: boolean;
+        message: string;
+        timestamp: Date;
+    };
+}
+
+/**
+ * System configuration structure
+ * @interface ISystemConfig
+ */
+export interface ISystemConfig {
+    systemComponent: 'SMTP' | 'OAuth' | 'AWS' | string;
+    componentConfig: ISmtpConfig | Record<string, any>;
+    lastUpdated?: Date;
+    status: 'active' | 'inactive' | 'error';
+    description?: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
